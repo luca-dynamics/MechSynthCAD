@@ -1,10 +1,97 @@
 import { formatNumber, formatVector } from "@/lib/format";
 import type { SliderCrankAnalysisResult, SliderCrankSweepResponse } from "@/types";
 
-type Props = { error: string | null; result: SliderCrankAnalysisResult | null; sweepResult?: SliderCrankSweepResponse | null; selectedSampleIndex?: number };
+type Props = {
+  error: string | null;
+  result: SliderCrankAnalysisResult | null;
+  sweepResult?: SliderCrankSweepResponse | null;
+  selectedSampleIndex?: number;
+};
+
+function SweepSummary({ sweepResult }: { sweepResult: SliderCrankSweepResponse }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <h3 className="font-semibold text-slate-900">Sweep Summary</h3>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
+        <dt className="font-medium">Samples</dt>
+        <dd>{sweepResult.sample_count}</dd>
+        <dt className="font-medium">Valid</dt>
+        <dd>{sweepResult.valid_sample_count}</dd>
+        <dt className="font-medium">Invalid</dt>
+        <dd>{sweepResult.invalid_sample_count}</dd>
+      </dl>
+    </div>
+  );
+}
+
+function MotionSummary({ display }: { display: SliderCrankAnalysisResult }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+      <h3 className="font-semibold text-slate-900">Analysis Summary</h3>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
+        <dt className="font-medium">Valid</dt>
+        <dd>{String(display.valid)}</dd>
+        <dt className="font-medium">θ</dt>
+        <dd>{formatNumber(display.theta_deg, "°")}</dd>
+        <dt className="font-medium">Slider position</dt>
+        <dd>{formatNumber(display.slider_position, " mm")}</dd>
+        <dt className="font-medium">Transmission angle</dt>
+        <dd>{formatNumber(display.transmission_angle_deg, "°")}</dd>
+      </dl>
+      <h4 className="mt-4 font-semibold text-slate-900">Velocity</h4>
+      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+        <dt>V_A</dt>
+        <dd>{formatVector(display.velocity_analysis.velocity_A, " mm/s")}</dd>
+        <dt>V_B</dt>
+        <dd>{formatVector(display.velocity_analysis.velocity_B, " mm/s")}</dd>
+        <dt>Slider velocity</dt>
+        <dd>{formatNumber(display.velocity_analysis.slider_velocity, " mm/s")}</dd>
+      </dl>
+      <h4 className="mt-4 font-semibold text-slate-900">Acceleration</h4>
+      <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+        <dt>A_A</dt>
+        <dd>{formatVector(display.acceleration_analysis.acceleration_A, " mm/s²")}</dd>
+        <dt>A_B</dt>
+        <dd>{formatVector(display.acceleration_analysis.acceleration_B, " mm/s²")}</dd>
+        <dt>Slider acceleration</dt>
+        <dd>{formatNumber(display.acceleration_analysis.slider_acceleration, " mm/s²")}</dd>
+      </dl>
+    </div>
+  );
+}
+
+function RawJsonBlock({ display }: { display: SliderCrankAnalysisResult | null }) {
+  return (
+    <pre className="mt-4 min-h-[320px] overflow-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
+      {display ? JSON.stringify(display, null, 2) : "Run slider-crank analysis to display the API response."}
+    </pre>
+  );
+}
 
 export function SliderCrankResultsPanel({ error, result, sweepResult = null, selectedSampleIndex = 0 }: Props) {
   const selectedSample = sweepResult?.samples[selectedSampleIndex] ?? null;
-  const display = selectedSample ? { ...result, valid: selectedSample.valid, theta_deg: selectedSample.theta_deg, slider_position: selectedSample.slider_position, transmission_angle_deg: selectedSample.transmission_angle_deg, joint_coordinates: selectedSample.joint_coordinates, velocity_analysis: selectedSample.velocity_analysis, acceleration_analysis: selectedSample.acceleration_analysis, notes: selectedSample.notes } as SliderCrankAnalysisResult : result;
-  return <aside className="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm"><h2 className="text-xl font-semibold">Slider-Crank Results</h2><p className="mt-1 text-sm text-slate-500">Structured deterministic solver output.</p>{sweepResult && <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><h3 className="font-semibold text-slate-900">Sweep Summary</h3><dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2"><dt className="font-medium">Samples</dt><dd>{sweepResult.sample_count}</dd><dt className="font-medium">Valid</dt><dd>{sweepResult.valid_sample_count}</dd><dt className="font-medium">Invalid</dt><dd>{sweepResult.invalid_sample_count}</dd></dl></div>}{error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}{display && <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><h3 className="font-semibold text-slate-900">Analysis Summary</h3><dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2"><dt className="font-medium">Valid</dt><dd>{String(display.valid)}</dd><dt className="font-medium">θ</dt><dd>{formatNumber(display.theta_deg, "°")}</dd><dt className="font-medium">Slider position</dt><dd>{formatNumber(display.slider_position, " mm")}</dd><dt className="font-medium">Transmission angle</dt><dd>{formatNumber(display.transmission_angle_deg, "°")}</dd></dl><h4 className="mt-4 font-semibold text-slate-900">Velocity</h4><dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2"><dt>V_A</dt><dd>{formatVector(display.velocity_analysis.velocity_A, " mm/s")}</dd><dt>V_B</dt><dd>{formatVector(display.velocity_analysis.velocity_B, " mm/s")}</dd><dt>Slider velocity</dt><dd>{formatNumber(display.velocity_analysis.slider_velocity, " mm/s")}</dd></dl><h4 className="mt-4 font-semibold text-slate-900">Acceleration</h4><dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2"><dt>A_A</dt><dd>{formatVector(display.acceleration_analysis.acceleration_A, " mm/s²")}</dd><dt>A_B</dt><dd>{formatVector(display.acceleration_analysis.acceleration_B, " mm/s²")}</dd><dt>Slider acceleration</dt><dd>{formatNumber(display.acceleration_analysis.slider_acceleration, " mm/s²")}</dd></dl></div>}<pre className="mt-4 min-h-[320px] overflow-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">{display ? JSON.stringify(display, null, 2) : "Run slider-crank analysis to display the API response."}</pre></aside>;
+  const display = selectedSample
+    ? ({
+        ...result,
+        valid: selectedSample.valid,
+        theta_deg: selectedSample.theta_deg,
+        slider_position: selectedSample.slider_position,
+        transmission_angle_deg: selectedSample.transmission_angle_deg,
+        joint_coordinates: selectedSample.joint_coordinates,
+        velocity_analysis: selectedSample.velocity_analysis,
+        acceleration_analysis: selectedSample.acceleration_analysis,
+        notes: selectedSample.notes,
+      } as SliderCrankAnalysisResult)
+    : result;
+
+  return (
+    <aside className="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
+      <h2 className="text-xl font-semibold">Slider-Crank Results</h2>
+      <p className="mt-1 text-sm text-slate-500">Structured deterministic solver output.</p>
+      {sweepResult ? <SweepSummary sweepResult={sweepResult} /> : null}
+      {error ? <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+      {display ? <MotionSummary display={display} /> : null}
+      <RawJsonBlock display={display} />
+    </aside>
+  );
 }

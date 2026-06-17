@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { generateMechanismReport } from "@/lib/api";
 import type { ReportMechanismType, ReportResponse } from "@/types";
 
@@ -16,6 +16,14 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reportInputSignature = useMemo(
+    () => JSON.stringify({ mechanismType, inputParameters, solverResult, sweepResult, agentWorkflow, synthesisRecommendations }),
+    [mechanismType, inputParameters, solverResult, sweepResult, agentWorkflow, synthesisRecommendations],
+  );
+
+  useEffect(() => {
+    setReport(null);
+  }, [reportInputSignature]);
 
   function buildMarkdownFilename() {
     const mechanismSlug = mechanismType.toLowerCase().replace(/_/g, "-").replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");

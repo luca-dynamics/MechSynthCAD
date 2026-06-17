@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { CadWorkspace } from "@/components/CadWorkspace";
+import { DeterministicTruthBanner } from "@/components/DeterministicTruthBanner";
 import { MechanismInputPanel } from "@/components/MechanismInputPanel";
 import { MechanismSelector } from "@/components/MechanismSelector";
 import { ResultsPanel } from "@/components/ResultsPanel";
@@ -10,6 +11,7 @@ import { SliderCrankInputPanel } from "@/components/SliderCrankInputPanel";
 import { SliderCrankResultsPanel } from "@/components/SliderCrankResultsPanel";
 import { SliderCrankSimulationControls } from "@/components/SliderCrankSimulationControls";
 import { SliderCrankWorkspace } from "@/components/SliderCrankWorkspace";
+import { ValidationMatrix } from "@/components/ValidationMatrix";
 import { WorkflowAndReportSection } from "@/components/WorkflowAndReportSection";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar, sweepSliderCrank } from "@/lib/api";
 import type { AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm, SynthesisResponse } from "@/types";
@@ -41,6 +43,15 @@ export default function Home() {
   const [sliderCrankError, setSliderCrankError] = useState<string | null>(null);
   const [latestWorkflow, setLatestWorkflow] = useState<AgentWorkflowResponse | null>(null);
   const [latestSynthesisRecommendations, setLatestSynthesisRecommendations] = useState<SynthesisResponse | null>(null);
+  const clearLatestWorkflow = useCallback(() => setLatestWorkflow(null), []);
+  const clearLatestSynthesisRecommendations = useCallback(() => setLatestSynthesisRecommendations(null), []);
+
+  useEffect(() => {
+    setLatestWorkflow(null);
+    setLatestSynthesisRecommendations(null);
+    setIsPlaying(false);
+    setIsSliderCrankPlaying(false);
+  }, [selectedMechanism]);
 
   const selectedSample = sweepResult?.samples[selectedSampleIndex] ?? null;
   const displayResult = useMemo<FourBarAnalysisResult | null>(() => {
@@ -55,7 +66,6 @@ export default function Home() {
   }, [selectedSliderCrankSample, sliderCrankForm, sliderCrankResult]);
 
   const agentAvailableContext = selectedMechanism === "four_bar" ? { ...form, ...(sweepResult ? sweepForm : {}) } : { ...sliderCrankForm, ...(sliderCrankSweepResult ? sliderCrankSweepForm : {}) };
-  const agentSolverResult = selectedMechanism === "four_bar" ? displayResult : displaySliderCrankResult;
   const reportInputParameters = selectedMechanism === "four_bar" ? form : sliderCrankForm;
   const reportSolverResult = selectedMechanism === "four_bar" ? displayResult || result : displaySliderCrankResult;
   const reportSweepResult = selectedMechanism === "four_bar" ? sweepResult : sliderCrankSweepResult;
@@ -137,6 +147,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-200 text-slate-900">
       <header className="border-b border-slate-300 bg-white/90 px-8 py-6 shadow-sm"><p className="text-sm font-semibold uppercase tracking-[0.35em] text-sky-700">MechSynthCAD</p><h1 className="mt-2 text-3xl font-bold text-slate-950">MechSynthCAD</h1><p className="mt-1 text-lg text-slate-600">AI-Assisted CAD-Based System for Planar Mechanisms</p></header>
+      <DeterministicTruthBanner />
       <section className="grid gap-6 p-6 lg:grid-cols-[360px_1fr_380px]">
         <aside className="space-y-5 rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
           <MechanismSelector selectedMechanism={selectedMechanism} onChange={setSelectedMechanism} />
@@ -146,7 +157,10 @@ export default function Home() {
         {selectedMechanism === "four_bar" ? <ResultsPanel error={error} displayResult={displayResult} result={result} sweepResult={sweepResult} /> : <SliderCrankResultsPanel error={sliderCrankError} result={displaySliderCrankResult} sweepResult={sliderCrankSweepResult} selectedSampleIndex={selectedSliderCrankSampleIndex} />}
       </section>
       <section className="px-6 pb-8">
-        <WorkflowAndReportSection selectedMechanism={selectedMechanism} availableContext={agentAvailableContext} solverResult={reportSolverResult as Record<string, unknown> | null} inputParameters={reportInputParameters} sweepResult={reportSweepResult as Record<string, unknown> | null} latestWorkflow={latestWorkflow} onWorkflowComplete={setLatestWorkflow} latestSynthesisRecommendations={latestSynthesisRecommendations} onSynthesisRecommendationsGenerated={setLatestSynthesisRecommendations} />
+        <WorkflowAndReportSection selectedMechanism={selectedMechanism} availableContext={agentAvailableContext} solverResult={reportSolverResult as Record<string, unknown> | null} inputParameters={reportInputParameters} sweepResult={reportSweepResult as Record<string, unknown> | null} latestWorkflow={latestWorkflow} onWorkflowComplete={setLatestWorkflow} onWorkflowCleared={clearLatestWorkflow} latestSynthesisRecommendations={latestSynthesisRecommendations} onSynthesisRecommendationsGenerated={setLatestSynthesisRecommendations} onSynthesisRecommendationsCleared={clearLatestSynthesisRecommendations} />
+      </section>
+      <section className="px-6 pb-8">
+        <ValidationMatrix />
       </section>
     </main>
   );

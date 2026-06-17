@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { runMechanismAgentWorkflow } from "@/lib/api";
 import type { AgentMechanismRequestType, AgentWorkflowResponse } from "@/types";
 
@@ -7,6 +7,7 @@ type AgentWorkflowPanelProps = {
   availableContext: Record<string, unknown>;
   solverResult: Record<string, unknown> | null;
   onWorkflowComplete?: (workflow: AgentWorkflowResponse) => void;
+  onWorkflowCleared?: () => void;
 };
 
 function ListBlock({ title, items }: { title: string; items: string[] }) {
@@ -18,11 +19,20 @@ function ListBlock({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function AgentWorkflowPanel({ mechanismType, availableContext, solverResult, onWorkflowComplete }: AgentWorkflowPanelProps) {
+export function AgentWorkflowPanel({ mechanismType, availableContext, solverResult, onWorkflowComplete, onWorkflowCleared }: AgentWorkflowPanelProps) {
   const [userGoal, setUserGoal] = useState("Validate inputs, plan solver usage, and prepare engineering interpretation.");
   const [workflow, setWorkflow] = useState<AgentWorkflowResponse | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const workflowInputSignature = useMemo(
+    () => JSON.stringify({ mechanismType, availableContext, solverResult }),
+    [mechanismType, availableContext, solverResult],
+  );
+
+  useEffect(() => {
+    setWorkflow(null);
+    onWorkflowCleared?.();
+  }, [workflowInputSignature, onWorkflowCleared]);
 
   async function runWorkflow() {
     setIsRunning(true);

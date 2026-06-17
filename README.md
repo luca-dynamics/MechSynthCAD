@@ -106,3 +106,9 @@ PR 14 adds a deterministic Design Iteration / Synthesis Assistant. The new backe
 The recommender provides parameter-adjustment directions only, such as reviewing link proportions or slider-crank geometry relationships. It does **not** generate final dimensions, does **not** calculate unverified mechanism outputs, and introduces no external AI numerical calculation. Any suggested change must be verified by rerunning the deterministic solver or sweep endpoint.
 
 Frontend users can define a target design goal near the workflow/report area, inspect target gaps copied from deterministic output fields, and include generated synthesis recommendations in the engineering report preview when available.
+
+### PR 15: Validation matrix and demo-readiness QA polish
+
+PR 15 adds a frontend validation/capability matrix and deterministic truth banner so demo users can see which features are ready, what their numerical source of truth is, and what verification remains required. Deterministic solver endpoints continue to own all numerical kinematic values. Agent workflow, synthesis recommendation, interpretation, and report layers assist with planning and communication only; they do not generate final engineering values.
+
+The UI now makes report/export readiness visible for engineering report preview, Markdown export, and browser print / Save-as-PDF. Workflow, synthesis, and generated report preview state is also cleared when core inputs or selected mechanisms change, reducing stale context during live demonstrations.
