@@ -1,4 +1,4 @@
-from app.agents.schemas import SelectedMechanismType
+from .schemas import SelectedMechanismType
 
 REQUIRED_INPUTS: dict[SelectedMechanismType, list[str]] = {
     "four_bar": ["l1", "l2", "l3", "l4", "theta2_deg", "omega2", "alpha2"],

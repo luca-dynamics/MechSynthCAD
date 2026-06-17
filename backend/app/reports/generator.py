@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.reports.schemas import ReportRequest, ReportResponse, ReportSection
+from .schemas import ReportRequest, ReportResponse, ReportSection
 
 FOUR_BAR_FIELDS = ["l1", "l2", "l3", "l4", "theta2_deg", "omega2", "alpha2"]
 FOUR_BAR_RESULT_FIELDS = ["valid", "grashof_status", "classification", "theta3_deg", "theta4_deg"]

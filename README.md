@@ -55,6 +55,30 @@ npm run dev
 
 The frontend runs at <http://localhost:3000> and calls the backend endpoints at `http://localhost:8000/api/mechanisms/fourbar/analyze`, `http://localhost:8000/api/mechanisms/fourbar/sweep`, and `http://localhost:8000/api/mechanisms/slider-crank/analyze`.
 
+
+## Deploying Full Stack on Vercel
+
+The repository includes a root `vercel.json` that deploys the `frontend/` Next.js app and the existing FastAPI backend together under one Vercel project. The Python serverless entrypoint is `api/index.py`, which imports the existing backend app instead of duplicating routes or solver logic.
+
+1. Import this GitHub repository into Vercel.
+2. Use the root repository as the Vercel project root so the root `vercel.json` is applied.
+3. Ensure the frontend builds from `frontend/` through the configured Next.js build.
+4. Ensure the Python API entrypoint remains `api/index.py`.
+5. Leave `NEXT_PUBLIC_API_BASE_URL` unset when using the same-domain Vercel backend; frontend calls will use relative `/api/...` paths on the same public Vercel link.
+6. Set `NEXT_PUBLIC_API_BASE_URL` only when using an external hosted backend.
+
+With this setup, `/` loads the MechSynthCAD frontend and `/api/...` requests are routed to the FastAPI backend.
+
+### Local Development API URL
+
+For local development, run the FastAPI backend at `http://localhost:8000`, create `frontend/.env.local`, and set:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+Then run the frontend from `frontend/` with `npm run dev`. If `NEXT_PUBLIC_API_BASE_URL` is omitted locally, the frontend will call relative `/api/...` paths on the Next.js dev server, which is intended for same-domain Vercel deployment rather than the separate local FastAPI process.
+
 ## Development Roadmap
 
 1. PR 1: Initial scaffold, dashboard layout, API contract, and documentation

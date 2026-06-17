@@ -1,6 +1,6 @@
 import type { AgentWorkflowRequest, AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepRequest, FourBarSweepResponse, ReportRequest, ReportResponse, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepRequest, SliderCrankSweepResponse, SynthesisRequest, SynthesisResponse } from "@/types";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export async function analyzeFourBar(form: FourBarForm): Promise<FourBarAnalysisResult> {
   const response = await fetch(`${API_BASE_URL}/api/mechanisms/fourbar/analyze`, {
