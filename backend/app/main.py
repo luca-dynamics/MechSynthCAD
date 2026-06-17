@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agents import AgentWorkflowRequest, AgentWorkflowResponse, run_agent_workflow
 from app.models import (
     FourBarAnalyzeRequest,
     FourBarAnalyzeResponse,
@@ -41,3 +42,8 @@ def analyze_four_bar_sweep_endpoint(request: FourBarSweepRequest) -> FourBarSwee
 @app.post("/api/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse)
 def analyze_slider_crank_endpoint(request: SliderCrankAnalyzeRequest) -> SliderCrankAnalyzeResponse:
     return analyze_slider_crank(request)
+
+
+@app.post("/api/agents/mechanism-workflow", response_model=AgentWorkflowResponse)
+def run_mechanism_agent_workflow_endpoint(request: AgentWorkflowRequest) -> AgentWorkflowResponse:
+    return run_agent_workflow(request)

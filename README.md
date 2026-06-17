@@ -65,9 +65,17 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoints at 
 6. PR 6: Deterministic four-bar velocity and acceleration analysis
 7. PR 7: Frontend component refactor
 8. PR 8: Slider-crank module as the second supported planar mechanism
-9. PR 9: AI explanation module
+9. PR 9: Agentic AI engineering workflow layer
 10. PR 10: Report generation
 
 ## Current Scope
 
 The current scope includes deterministic four-bar position, velocity, acceleration, and simulation sweep analysis plus deterministic slider-crank position, velocity, and acceleration analysis exposed through FastAPI. The solver now uses input angular velocity `ω2` and input angular acceleration `α2` to compute coupler/rocker angular velocity and acceleration plus joint B/C linear velocity and acceleration. These velocity and acceleration values are computed by backend vector-loop equations, not AI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; sweep samples now include position, velocity, and acceleration data for each θ2 sample, along with animation controls and lightweight graphs of θ3/θ4 against θ2. PR 8 adds slider-crank as the second supported planar mechanism with backend deterministic calculations, SVG visualization, mechanism selection, and structured result display. Four-bar functionality remains unchanged. The project still does not include real AI API integration or report generation.
+
+## PR 9 Agentic AI Engineering Workflow Layer
+
+PR 9 adds an agentic engineering workflow scaffold around the deterministic solver/CAD system. This is not a simple copilot explainer or generic chatbot attached to a result panel. The backend now contains a separate `backend/app/agents/` package with typed workflow schemas, a deterministic orchestrator, validation helpers, prompts/boundary text, and a tool registry for deterministic solver endpoints.
+
+The workflow represents six engineering roles: Intent Agent, Parameter Validation Agent, Solver Tool Agent, Result Interpretation Agent, Design Recommendation Agent, and Report Drafting Agent. These roles are currently implemented with deterministic, rule-based logic. They can interpret a user goal, identify required and missing inputs, plan which solver endpoint should be used, interpret a provided solver result, suggest design iteration direction, and draft a short report-ready summary.
+
+The agent layer does **not** calculate kinematic values. Four-bar and slider-crank calculations remain owned by deterministic backend solvers. Real LLM integration can be added later behind this architecture, but PR 9 intentionally avoids external AI API calls, API keys, or unverified numerical generation.
