@@ -8,11 +8,11 @@ The frontend is a Next.js TypeScript application styled with Tailwind CSS. It pr
 
 ## Backend: Python FastAPI
 
-The backend is a FastAPI service that exposes typed REST endpoints for mechanism analysis. The first API contract is `POST /api/mechanisms/fourbar/analyze`, which accepts four-bar geometry and input motion parameters and returns deterministic four-bar position data, including joint coordinates for A, B, C, and D when the configuration is valid. PR 5 adds `POST /api/mechanisms/fourbar/sweep`, which samples a θ2 range by repeatedly calling the deterministic single-angle solver and preserving valid and invalid configurations.
+The backend is a FastAPI service that exposes typed REST endpoints for mechanism analysis. The first API contract is `POST /api/mechanisms/fourbar/analyze`, which accepts four-bar geometry and input motion parameters and returns deterministic four-bar position data, including joint coordinates for A, B, C, and D when the configuration is valid. PR 6 extends this response with deterministic velocity and acceleration analysis that uses `ω2` and `α2` to compute `ω3`, `ω4`, `α3`, `α4`, and joint B/C linear velocity and acceleration. PR 5 adds `POST /api/mechanisms/fourbar/sweep`, and PR 6 extends each sweep sample so position, velocity, and acceleration data are preserved across the θ2 range.
 
 ## Deterministic Mathematical Solver
 
-The deterministic kinematic engine owns the core engineering calculations. The current solver performs four-bar position analysis and returns reproducible angular and joint-coordinate outputs. PR 5 adds deterministic sweep orchestration over input crank angles without duplicating position equations; every simulation sample comes from the backend solver. Future PRs may extend this layer with velocity and acceleration analysis, but those calculations remain deferred and separate from visualization and AI assistance.
+The deterministic kinematic engine owns the core engineering calculations. The current solver performs four-bar position analysis and returns reproducible angular and joint-coordinate outputs. PR 6 adds vector-loop velocity and acceleration equations in the backend solver: `ω2` produces joint B velocity and the solved `ω3`/`ω4` values, while `α2` and centripetal terms produce joint B/C acceleration and `α3`/`α4`. Singular or near-singular velocity/acceleration systems keep the position result valid but return null motion unknowns with explanatory notes. PR 5 adds deterministic sweep orchestration over input crank angles without duplicating position equations; every simulation sample now comes from the backend solver with position, velocity, and acceleration fields.
 
 ## AI-Assisted Explanation Layer
 
@@ -27,7 +27,7 @@ PR 4 replaces the placeholder drawing with a real CAD-style SVG workspace driven
 
 PR 5 introduces a lightweight simulation workflow for four-bar mechanisms. The frontend sends link lengths, motion inputs, and θ2 sweep bounds to the backend sweep endpoint. The backend returns ordered samples, and the frontend uses those samples to animate the SVG mechanism with play/pause, previous/next, and scrub controls. Invalid samples are retained in the response and handled visually rather than being recomputed or hidden by the frontend.
 
-The graphing layer is a simple SVG line chart that plots θ3 and θ4 against θ2. Invalid samples are represented as gaps so the chart remains tied to deterministic backend results. Velocity and acceleration graphs are intentionally not included yet because velocity and acceleration analysis are deferred to a later PR.
+The graphing layer is a simple SVG line chart that plots θ3 and θ4 against θ2. Invalid samples are represented as gaps so the chart remains tied to deterministic backend results. Velocity and acceleration graphing remains a follow-up opportunity; PR 6 keeps the UI focused by displaying structured angular and linear velocity/acceleration values while preserving the raw JSON response.
 
 ## Why AI Does Not Perform Core Calculations
 

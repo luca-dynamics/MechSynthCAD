@@ -14,7 +14,7 @@ The AI layer is intentionally supportive only. Core engineering calculations wil
 - TypeScript
 - Tailwind CSS
 - FastAPI backend
-- Deterministic four-bar position analysis and simulation sweep backend
+- Deterministic four-bar position, velocity, acceleration, and simulation sweep backend
 - AI assistant layer planned for explanation, validation support, and report generation
 
 ## Repository Structure
@@ -62,11 +62,11 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoints at 
 3. PR 3: FastAPI endpoint wired to the deterministic four-bar solver
 4. PR 4: Real frontend SVG CAD-style visualization from backend joint coordinates
 5. PR 5: Deterministic four-bar simulation sweep, SVG animation controls, and θ3/θ4 graphing
-6. PR 6: Velocity and acceleration analysis
+6. PR 6: Deterministic four-bar velocity and acceleration analysis
 7. PR 7: Slider-crank module
 8. PR 8: AI explanation module
 9. PR 9: Report generation
 
 ## Current Scope
 
-The current scope includes deterministic four-bar position analysis and deterministic four-bar simulation sweeps exposed through FastAPI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; PR 5 adds animation controls driven by backend sweep samples and lightweight graphs of θ3/θ4 against θ2. Velocity and acceleration analysis remain deferred to a later PR, and the project still does not include real AI API integration, slider-crank analysis, or report generation.
+The current scope includes deterministic four-bar position, velocity, acceleration, and simulation sweep analysis exposed through FastAPI. The solver now uses input angular velocity `ω2` and input angular acceleration `α2` to compute coupler/rocker angular velocity and acceleration plus joint B/C linear velocity and acceleration. These velocity and acceleration values are computed by backend vector-loop equations, not AI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; sweep samples now include position, velocity, and acceleration data for each θ2 sample, along with animation controls and lightweight graphs of θ3/θ4 against θ2. The project still does not include real AI API integration, slider-crank analysis, or report generation.

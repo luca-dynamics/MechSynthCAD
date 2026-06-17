@@ -23,6 +23,22 @@ class JointCoordinates(BaseModel):
     D: Coordinate
 
 
+class VelocityAnalysis(BaseModel):
+    omega2: float
+    omega3: float | None
+    omega4: float | None
+    velocity_B: Coordinate | None
+    velocity_C: Coordinate | None
+
+
+class AccelerationAnalysis(BaseModel):
+    alpha2: float
+    alpha3: float | None
+    alpha4: float | None
+    acceleration_B: Coordinate | None
+    acceleration_C: Coordinate | None
+
+
 class FourBarAnalyzeResponse(BaseModel):
     mechanism: Literal["four_bar_linkage"]
     valid: bool
@@ -33,6 +49,8 @@ class FourBarAnalyzeResponse(BaseModel):
     theta3_deg: float | None
     theta4_deg: float | None
     joint_coordinates: JointCoordinates
+    velocity_analysis: VelocityAnalysis
+    acceleration_analysis: AccelerationAnalysis
     notes: list[str]
 
 
@@ -54,6 +72,8 @@ class FourBarSweepSample(BaseModel):
     theta3_deg: float | None
     theta4_deg: float | None
     joint_coordinates: JointCoordinates
+    velocity_analysis: VelocityAnalysis
+    acceleration_analysis: AccelerationAnalysis
     notes: list[str]
 
 
