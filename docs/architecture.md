@@ -61,4 +61,11 @@ PR 10 adds a dedicated report package at `backend/app/reports/` with typed schem
 
 The report endpoint, `POST /api/reports/mechanism`, accepts the selected mechanism type, input parameters, optional deterministic solver result, optional sweep result, and optional agent workflow summary. It returns structured report sections plus a markdown preview generated from the same section data. Report content can reference only supplied inputs, deterministic solver outputs, and supplied workflow summaries. Missing numerical values are rendered as `N/A`; the generator does not synthesize or infer unprovided engineering numbers.
 
-The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and slider-crank workflows. It renders report title, validation notes, structured sections, and a clearly separated markdown preview. The panel explicitly communicates that numerical values originate from solver outputs and that there is no file export yet. PDF export, markdown download, and other file-generation workflows are deferred to later work.
+The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and slider-crank workflows. It renders report title, validation notes, structured sections, and a clearly separated markdown preview. The panel explicitly communicates that numerical values originate from solver outputs. PR 11 adds browser-side markdown report download from the already-generated `report.markdown` string using a Blob/ObjectURL, so no server-side file generation or second backend call is needed. PDF export remains deferred.
+
+
+## PR 11 Markdown Export and Page Structure Cleanup
+
+PR 11 adds browser-side markdown report download for both four-bar and slider-crank reports. The export uses the existing markdown returned by `POST /api/reports/mechanism`, creates a local `.md` file in the browser, and does not introduce PDF generation or any server-side file-generation endpoint.
+
+The frontend page structure is also cleaned up so `frontend/src/app/page.tsx` remains an orchestration layer for state, derived solver/report context, and API actions. The mechanism selector, slider-crank CAD visualization workspace, and combined workflow/report section now live in dedicated reusable components.

@@ -15,6 +15,24 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function buildMarkdownFilename() {
+    const mechanismSlug = mechanismType.toLowerCase().replace(/_/g, "-").replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    return `mech-synthcad-${mechanismSlug}-report.md`;
+  }
+
+  function downloadMarkdownReport() {
+    if (!report) return;
+    const blob = new Blob([report.markdown], { type: "text/markdown;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = buildMarkdownFilename();
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  }
+
   async function generateReport() {
     setIsLoading(true);
     setError(null);
@@ -35,9 +53,12 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Engineering Report Preview</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Structured report generation</h2>
           <p className="mt-2 text-sm text-slate-600">Generated from deterministic solver output and agent workflow summary. Numerical values originate from solver outputs.</p>
-          <p className="mt-1 text-sm font-semibold text-amber-700">No file export yet.</p>
+          <p className="mt-1 text-sm font-semibold text-emerald-700">Markdown export available. PDF export deferred.</p>
         </div>
-        <button type="button" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-emerald-300" onClick={generateReport} disabled={isLoading}>{isLoading ? "Generating..." : "Generate Engineering Report"}</button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-emerald-300" onClick={generateReport} disabled={isLoading}>{isLoading ? "Generating..." : "Generate Engineering Report"}</button>
+          {report ? <button type="button" className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50" onClick={downloadMarkdownReport}>Download Markdown Report</button> : null}
+        </div>
       </div>
       {error ? <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       {report ? (

@@ -134,7 +134,8 @@ export type SliderCrankAnalysisResult = {
   notes: string[];
 };
 
-export type AgentMechanismRequestType = "four_bar" | "slider_crank" | "auto";
+export type MechanismType = "four_bar" | "slider_crank";
+export type AgentMechanismRequestType = MechanismType | "auto";
 export type AgentSelectedMechanismType = "four_bar" | "slider_crank" | "unknown";
 
 export type AgentWorkflowRequest = {
@@ -167,7 +168,7 @@ export type AgentWorkflowResponse = {
 };
 
 
-export type ReportMechanismType = "four_bar" | "slider_crank";
+export type ReportMechanismType = MechanismType;
 
 export type ReportRequest = {
   title?: string | null;

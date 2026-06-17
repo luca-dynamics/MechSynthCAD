@@ -67,6 +67,7 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoints at 
 8. PR 8: Slider-crank module as the second supported planar mechanism
 9. PR 9: Agentic AI engineering workflow layer
 10. PR 10: Report generation
+11. PR 11: Browser-side markdown report download and frontend page structure cleanup
 
 ## Current Scope
 
@@ -84,4 +85,4 @@ The agent layer does **not** calculate kinematic values. Four-bar and slider-cra
 
 PR 10 adds a structured engineering report preview workflow. The backend now exposes `POST /api/reports/mechanism`, which converts supplied mechanism inputs, deterministic solver outputs, optional four-bar sweep data, and optional agent workflow summaries into typed report sections and markdown preview text.
 
-The report generator is intentionally separate from solvers and agents. It does not run new kinematic calculations and does not invent engineering numbers: missing or null values are shown as `N/A`, and deterministic solver outputs remain the numerical source of truth. The frontend adds an Engineering Report Preview panel for both four-bar and slider-crank workflows. File export, PDF export, and markdown download are deferred to a later PR.
+The report generator is intentionally separate from solvers and agents. It does not run new kinematic calculations and does not invent engineering numbers: missing or null values are shown as `N/A`, and deterministic solver outputs remain the numerical source of truth. The frontend adds an Engineering Report Preview panel for both four-bar and slider-crank workflows. PR 11 adds browser-side markdown download from the existing preview without server-side file generation or additional report API calls. PDF export remains deferred. PR 11 also keeps the frontend page orchestration lean by extracting the mechanism selector, slider-crank visualization workspace, and workflow/report section into reusable components.
