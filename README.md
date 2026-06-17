@@ -62,12 +62,12 @@ The repository includes a root `vercel.json` that deploys the `frontend/` Next.j
 
 1. Import this GitHub repository into Vercel.
 2. Use the root repository as the Vercel project root so the root `vercel.json` is applied.
-3. Ensure the frontend builds from `frontend/` through the configured Next.js build.
+3. Ensure the frontend builds from `frontend/` through the configured Next.js service.
 4. Ensure the Python API entrypoint remains `api/index.py`.
 5. Leave `NEXT_PUBLIC_API_BASE_URL` unset when using the same-domain Vercel backend; frontend calls will use relative `/api/...` paths on the same public Vercel link.
 6. Set `NEXT_PUBLIC_API_BASE_URL` only when using an external hosted backend.
 
-With this setup, `/` loads the MechSynthCAD frontend and `/api/...` requests are routed to the FastAPI backend.
+With this setup, `/` loads the MechSynthCAD frontend and `/api/...` requests are routed to the FastAPI backend. If Vercel detects multiple services during import, keep Root Directory as `./` and ensure the root `vercel.json` is present. The frontend service should use `/`; the backend service should expose `/api`.
 
 ### Local Development API URL
 
