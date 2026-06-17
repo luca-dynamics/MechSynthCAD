@@ -1,6 +1,7 @@
 import { AgentWorkflowPanel } from "@/components/AgentWorkflowPanel";
 import { ReportPreviewPanel } from "@/components/ReportPreviewPanel";
-import type { AgentWorkflowResponse, MechanismType } from "@/types";
+import { SynthesisRecommendationPanel } from "@/components/SynthesisRecommendationPanel";
+import type { AgentWorkflowResponse, MechanismType, SynthesisResponse } from "@/types";
 
 type WorkflowAndReportSectionProps = {
   selectedMechanism: MechanismType;
@@ -10,13 +11,16 @@ type WorkflowAndReportSectionProps = {
   sweepResult: Record<string, unknown> | null;
   latestWorkflow: AgentWorkflowResponse | null;
   onWorkflowComplete: (workflow: AgentWorkflowResponse) => void;
+  latestSynthesisRecommendations: SynthesisResponse | null;
+  onSynthesisRecommendationsGenerated: (response: SynthesisResponse) => void;
 };
 
-export function WorkflowAndReportSection({ selectedMechanism, availableContext, solverResult, inputParameters, sweepResult, latestWorkflow, onWorkflowComplete }: WorkflowAndReportSectionProps) {
+export function WorkflowAndReportSection({ selectedMechanism, availableContext, solverResult, inputParameters, sweepResult, latestWorkflow, onWorkflowComplete, latestSynthesisRecommendations, onSynthesisRecommendationsGenerated }: WorkflowAndReportSectionProps) {
   return (
     <div className="space-y-6">
       <AgentWorkflowPanel mechanismType={selectedMechanism} availableContext={availableContext} solverResult={solverResult} onWorkflowComplete={onWorkflowComplete} />
-      <ReportPreviewPanel mechanismType={selectedMechanism} inputParameters={inputParameters} solverResult={solverResult} sweepResult={sweepResult} agentWorkflow={latestWorkflow as Record<string, unknown> | null} />
+      <SynthesisRecommendationPanel selectedMechanism={selectedMechanism} inputParameters={inputParameters} solverResult={solverResult} sweepResult={sweepResult} onRecommendationsGenerated={onSynthesisRecommendationsGenerated} />
+      <ReportPreviewPanel mechanismType={selectedMechanism} inputParameters={inputParameters} solverResult={solverResult} sweepResult={sweepResult} agentWorkflow={latestWorkflow as Record<string, unknown> | null} synthesisRecommendations={latestSynthesisRecommendations as Record<string, unknown> | null} />
     </div>
   );
 }

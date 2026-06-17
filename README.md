@@ -98,3 +98,11 @@ The print output is based on the existing generated report preview and determini
 ### PR 13: Slider-crank sweep, animation, and graphing
 
 PR 13 adds deterministic slider-crank sweep simulation. The backend sweep endpoint reuses the existing single-angle slider-crank solver for every sample, so position, velocity, and acceleration values remain deterministic and no AI calculations are introduced. The frontend now provides slider-crank sweep controls, SVG animation playback, and a lightweight slider-position graph. Slider-crank report previews can include supplied sweep summaries with sample, valid-sample, and invalid-sample counts.
+
+### PR 14: Deterministic design iteration / synthesis recommendations
+
+PR 14 adds a deterministic Design Iteration / Synthesis Assistant. The new backend synthesis package and `POST /api/synthesis/recommendations` endpoint compare supplied solver outputs and optional sweep summaries against user-defined target goals for supported four-bar and slider-crank metrics.
+
+The recommender provides parameter-adjustment directions only, such as reviewing link proportions or slider-crank geometry relationships. It does **not** generate final dimensions, does **not** calculate unverified mechanism outputs, and introduces no external AI numerical calculation. Any suggested change must be verified by rerunning the deterministic solver or sweep endpoint.
+
+Frontend users can define a target design goal near the workflow/report area, inspect target gaps copied from deterministic output fields, and include generated synthesis recommendations in the engineering report preview when available.

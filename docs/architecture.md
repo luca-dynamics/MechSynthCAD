@@ -82,3 +82,13 @@ Print-specific CSS isolates the report area, hides app chrome and interactive co
 Slider-crank sweep simulation is implemented as a deterministic backend workflow. `POST /api/mechanisms/slider-crank/sweep` accepts a crank-angle range and calls the existing single-angle slider-crank solver for each generated sample rather than duplicating formulas or using AI for calculations. Invalid samples are preserved in the response, and sample counts are capped to protect the API from accidental excessive sweeps.
 
 The frontend mirrors four-bar simulation behavior for slider-crank mechanisms with dedicated sweep controls, SVG animation controls, and a lightweight graph of slider position versus crank angle. Report context can include slider-crank sweep summaries, limited to values supplied by deterministic solver responses.
+
+## PR 14 Deterministic Synthesis Recommendation Layer
+
+PR 14 adds a separate backend synthesis package at `backend/app/synthesis/`. This package is intentionally separate from deterministic solvers, the agent workflow package, and report generation. Its endpoint, `POST /api/synthesis/recommendations`, accepts the selected mechanism, input parameters, supplied deterministic solver output, optional sweep output, and target design goals.
+
+The synthesis layer does not solve new kinematics, infer hidden values, or invent final dimensions. It only inspects fields already present in `solver_result` or `sweep_result`, including top-level position metrics, nested velocity/acceleration metrics, and sweep sample counts. If a metric is missing, the response states that the target cannot be evaluated from the current deterministic output.
+
+Recommendations are deterministic parameter-adjustment directions, not black-box AI synthesis. Four-bar guidance focuses on reviewing link proportions and assembly feasibility; slider-crank guidance focuses on reviewing crank radius, connecting rod length, offset, input motion, and geometry relationships. Every recommendation keeps the solver as the numerical source of truth and requires a deterministic rerun before accepting any design change.
+
+The frontend exposes this as a non-chat target-goal panel labeled “Design Iteration / Synthesis Assistant.” Generated synthesis responses can be passed into the existing report preview, which adds a “Synthesis / Design Iteration Recommendations” section without changing solver math or introducing AI numerical calculation.

@@ -12,6 +12,7 @@ class ReportRequest(BaseModel):
     solver_result: dict[str, Any] | None = None
     sweep_result: dict[str, Any] | None = None
     agent_workflow: dict[str, Any] | None = None
+    synthesis_recommendations: dict[str, Any] | None = None
 
 
 class ReportSection(BaseModel):

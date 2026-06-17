@@ -8,9 +8,10 @@ type ReportPreviewPanelProps = {
   solverResult: Record<string, unknown> | null;
   sweepResult: Record<string, unknown> | null;
   agentWorkflow: Record<string, unknown> | null;
+  synthesisRecommendations?: Record<string, unknown> | null;
 };
 
-export function ReportPreviewPanel({ mechanismType, inputParameters, solverResult, sweepResult, agentWorkflow }: ReportPreviewPanelProps) {
+export function ReportPreviewPanel({ mechanismType, inputParameters, solverResult, sweepResult, agentWorkflow, synthesisRecommendations }: ReportPreviewPanelProps) {
   const displayMechanismType = mechanismType.replace("_", "-");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +44,7 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
     setIsLoading(true);
     setError(null);
     try {
-      setReport(await generateMechanismReport({ mechanism_type: mechanismType, input_parameters: inputParameters, solver_result: solverResult, sweep_result: sweepResult, agent_workflow: agentWorkflow }));
+      setReport(await generateMechanismReport({ mechanism_type: mechanismType, input_parameters: inputParameters, solver_result: solverResult, sweep_result: sweepResult, agent_workflow: agentWorkflow, synthesis_recommendations: synthesisRecommendations }));
     } catch (reportError) {
       setError(reportError instanceof Error ? reportError.message : "Unable to generate report preview");
       setReport(null);

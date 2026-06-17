@@ -177,6 +177,7 @@ export type ReportRequest = {
   solver_result?: Record<string, unknown> | null;
   sweep_result?: Record<string, unknown> | null;
   agent_workflow?: Record<string, unknown> | null;
+  synthesis_recommendations?: Record<string, unknown> | null;
 };
 
 export type ReportSection = {
@@ -228,4 +229,41 @@ export type SliderCrankSweepResponse = {
   invalid_sample_count: number;
   samples: SliderCrankSweepSample[];
   notes: string[];
+};
+
+export type SynthesisMechanismType = MechanismType;
+export type SynthesisTargetDirection = "increase" | "decrease" | "match" | "minimize" | "maximize";
+
+export type SynthesisTarget = {
+  metric: string;
+  target_value?: number | null;
+  direction: SynthesisTargetDirection;
+  tolerance?: number | null;
+  description?: string | null;
+};
+
+export type SynthesisRequest = {
+  mechanism_type: SynthesisMechanismType;
+  input_parameters: Record<string, unknown>;
+  solver_result?: Record<string, unknown> | null;
+  sweep_result?: Record<string, unknown> | null;
+  targets: SynthesisTarget[];
+};
+
+export type SynthesisRecommendation = {
+  parameter: string;
+  suggested_direction: "increase" | "decrease" | "hold" | "review";
+  reason: string;
+  confidence: "low" | "medium" | "high";
+  requires_solver_rerun: boolean;
+};
+
+export type SynthesisResponse = {
+  mechanism_type: SynthesisMechanismType;
+  interpreted_targets: string[];
+  current_observations: string[];
+  target_gaps: string[];
+  recommendations: SynthesisRecommendation[];
+  next_solver_actions: string[];
+  safety_notes: string[];
 };
