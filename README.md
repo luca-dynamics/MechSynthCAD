@@ -14,7 +14,7 @@ The AI layer is intentionally supportive only. Core engineering calculations wil
 - TypeScript
 - Tailwind CSS
 - FastAPI backend
-- Deterministic four-bar position, velocity, acceleration, and simulation sweep backend
+- Deterministic four-bar and slider-crank position, velocity, and acceleration backend solvers
 - AI assistant layer planned for explanation, validation support, and report generation
 
 ## Repository Structure
@@ -53,7 +53,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at <http://localhost:3000> and calls the backend endpoints at `http://localhost:8000/api/mechanisms/fourbar/analyze` and `http://localhost:8000/api/mechanisms/fourbar/sweep`.
+The frontend runs at <http://localhost:3000> and calls the backend endpoints at `http://localhost:8000/api/mechanisms/fourbar/analyze`, `http://localhost:8000/api/mechanisms/fourbar/sweep`, and `http://localhost:8000/api/mechanisms/slider-crank/analyze`.
 
 ## Development Roadmap
 
@@ -63,10 +63,11 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoints at 
 4. PR 4: Real frontend SVG CAD-style visualization from backend joint coordinates
 5. PR 5: Deterministic four-bar simulation sweep, SVG animation controls, and θ3/θ4 graphing
 6. PR 6: Deterministic four-bar velocity and acceleration analysis
-7. PR 7: Slider-crank module
-8. PR 8: AI explanation module
-9. PR 9: Report generation
+7. PR 7: Frontend component refactor
+8. PR 8: Slider-crank module as the second supported planar mechanism
+9. PR 9: AI explanation module
+10. PR 10: Report generation
 
 ## Current Scope
 
-The current scope includes deterministic four-bar position, velocity, acceleration, and simulation sweep analysis exposed through FastAPI. The solver now uses input angular velocity `ω2` and input angular acceleration `α2` to compute coupler/rocker angular velocity and acceleration plus joint B/C linear velocity and acceleration. These velocity and acceleration values are computed by backend vector-loop equations, not AI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; sweep samples now include position, velocity, and acceleration data for each θ2 sample, along with animation controls and lightweight graphs of θ3/θ4 against θ2. The project still does not include real AI API integration, slider-crank analysis, or report generation.
+The current scope includes deterministic four-bar position, velocity, acceleration, and simulation sweep analysis plus deterministic slider-crank position, velocity, and acceleration analysis exposed through FastAPI. The solver now uses input angular velocity `ω2` and input angular acceleration `α2` to compute coupler/rocker angular velocity and acceleration plus joint B/C linear velocity and acceleration. These velocity and acceleration values are computed by backend vector-loop equations, not AI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; sweep samples now include position, velocity, and acceleration data for each θ2 sample, along with animation controls and lightweight graphs of θ3/θ4 against θ2. PR 8 adds slider-crank as the second supported planar mechanism with backend deterministic calculations, SVG visualization, mechanism selection, and structured result display. Four-bar functionality remains unchanged. The project still does not include real AI API integration or report generation.
