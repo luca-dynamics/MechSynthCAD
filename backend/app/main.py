@@ -3,7 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .agents import AgentWorkflowRequest, AgentWorkflowResponse, run_agent_workflow
 from .reports import ReportRequest, ReportResponse, generate_mechanism_report
-from .synthesis import SynthesisRequest, SynthesisResponse, generate_synthesis_recommendations
+from .synthesis import (
+    SynthesisRequest,
+    SynthesisResponse,
+    generate_synthesis_recommendations,
+)
 from .models import (
     FourBarAnalyzeRequest,
     FourBarAnalyzeResponse,
@@ -31,36 +35,98 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-
 
 @app.get("/api/health")
 def api_health() -> dict[str, str]:
     return {"status": "ok", "service": "MechSynthCAD API"}
 
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return api_health()
+
+
+@app.get("/api/debug/scope")
+def api_debug_scope() -> dict[str, str]:
+    return {
+        "status": "ok",
+        "message": "MechSynthCAD API debug route reached",
+    }
+
+
+@app.get("/debug/scope")
+def debug_scope() -> dict[str, str]:
+    return api_debug_scope()
+
+
 @app.post("/api/mechanisms/fourbar/analyze", response_model=FourBarAnalyzeResponse)
 def analyze_four_bar_endpoint(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     return analyze_four_bar(request)
 
+
+@app.post("/mechanisms/fourbar/analyze", response_model=FourBarAnalyzeResponse)
+def analyze_four_bar_alias_endpoint(
+    request: FourBarAnalyzeRequest,
+) -> FourBarAnalyzeResponse:
+    return analyze_four_bar_endpoint(request)
+
+
 @app.post("/api/mechanisms/fourbar/sweep", response_model=FourBarSweepResponse)
-def analyze_four_bar_sweep_endpoint(request: FourBarSweepRequest) -> FourBarSweepResponse:
+def analyze_four_bar_sweep_endpoint(
+    request: FourBarSweepRequest,
+) -> FourBarSweepResponse:
     return analyze_four_bar_sweep(request)
 
-@app.post("/api/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse)
-def analyze_slider_crank_endpoint(request: SliderCrankAnalyzeRequest) -> SliderCrankAnalyzeResponse:
+
+@app.post("/mechanisms/fourbar/sweep", response_model=FourBarSweepResponse)
+def analyze_four_bar_sweep_alias_endpoint(
+    request: FourBarSweepRequest,
+) -> FourBarSweepResponse:
+    return analyze_four_bar_sweep_endpoint(request)
+
+
+@app.post(
+    "/api/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse
+)
+def analyze_slider_crank_endpoint(
+    request: SliderCrankAnalyzeRequest,
+) -> SliderCrankAnalyzeResponse:
     return analyze_slider_crank(request)
 
 
+@app.post("/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse)
+def analyze_slider_crank_alias_endpoint(
+    request: SliderCrankAnalyzeRequest,
+) -> SliderCrankAnalyzeResponse:
+    return analyze_slider_crank_endpoint(request)
+
+
 @app.post("/api/mechanisms/slider-crank/sweep", response_model=SliderCrankSweepResponse)
-def analyze_slider_crank_sweep_endpoint(request: SliderCrankSweepRequest) -> SliderCrankSweepResponse:
+def analyze_slider_crank_sweep_endpoint(
+    request: SliderCrankSweepRequest,
+) -> SliderCrankSweepResponse:
     return analyze_slider_crank_sweep(request)
 
 
+@app.post("/mechanisms/slider-crank/sweep", response_model=SliderCrankSweepResponse)
+def analyze_slider_crank_sweep_alias_endpoint(
+    request: SliderCrankSweepRequest,
+) -> SliderCrankSweepResponse:
+    return analyze_slider_crank_sweep_endpoint(request)
+
+
 @app.post("/api/agents/mechanism-workflow", response_model=AgentWorkflowResponse)
-def run_mechanism_agent_workflow_endpoint(request: AgentWorkflowRequest) -> AgentWorkflowResponse:
+def run_mechanism_agent_workflow_endpoint(
+    request: AgentWorkflowRequest,
+) -> AgentWorkflowResponse:
     return run_agent_workflow(request)
+
+
+@app.post("/agents/mechanism-workflow", response_model=AgentWorkflowResponse)
+def run_mechanism_agent_workflow_alias_endpoint(
+    request: AgentWorkflowRequest,
+) -> AgentWorkflowResponse:
+    return run_mechanism_agent_workflow_endpoint(request)
 
 
 @app.post("/api/reports/mechanism", response_model=ReportResponse)
@@ -68,6 +134,20 @@ def generate_mechanism_report_endpoint(request: ReportRequest) -> ReportResponse
     return generate_mechanism_report(request)
 
 
+@app.post("/reports/mechanism", response_model=ReportResponse)
+def generate_mechanism_report_alias_endpoint(request: ReportRequest) -> ReportResponse:
+    return generate_mechanism_report_endpoint(request)
+
+
 @app.post("/api/synthesis/recommendations", response_model=SynthesisResponse)
-def generate_synthesis_recommendations_endpoint(request: SynthesisRequest) -> SynthesisResponse:
+def generate_synthesis_recommendations_endpoint(
+    request: SynthesisRequest,
+) -> SynthesisResponse:
     return generate_synthesis_recommendations(request)
+
+
+@app.post("/synthesis/recommendations", response_model=SynthesisResponse)
+def generate_synthesis_recommendations_alias_endpoint(
+    request: SynthesisRequest,
+) -> SynthesisResponse:
+    return generate_synthesis_recommendations_endpoint(request)
