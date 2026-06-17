@@ -67,3 +67,77 @@ def test_analyze_endpoint():
     assert data["mechanism"] == "four_bar_linkage"
     assert data["valid"] is True
     assert data["joint_coordinates"]["C"] is not None
+
+
+def sweep_payload() -> dict[str, float]:
+    payload = valid_payload()
+    payload.pop("theta2_deg")
+    payload.update({
+        "theta2_start_deg": 0,
+        "theta2_end_deg": 90,
+        "theta2_step_deg": 30,
+    })
+    return payload
+
+
+def test_sweep_returns_multiple_samples_and_counts_match():
+    from app.models import FourBarSweepRequest
+    from app.solvers.fourbar import analyze_four_bar_sweep
+
+    response = analyze_four_bar_sweep(FourBarSweepRequest(**sweep_payload()))
+
+    assert response.sample_count == 4
+    assert len(response.samples) == 4
+    assert response.valid_sample_count + response.invalid_sample_count == response.sample_count
+    assert any("Velocity and acceleration" in note for note in response.notes)
+
+
+def test_decreasing_sweep_range_works():
+    from app.models import FourBarSweepRequest
+    from app.solvers.fourbar import analyze_four_bar_sweep
+
+    payload = sweep_payload()
+    payload.update({"theta2_start_deg": 90, "theta2_end_deg": 0, "theta2_step_deg": 30})
+
+    response = analyze_four_bar_sweep(FourBarSweepRequest(**payload))
+
+    assert [sample.theta2_deg for sample in response.samples] == [90, 60, 30, 0]
+
+
+def test_zero_sweep_step_returns_safe_invalid_response():
+    from app.models import FourBarSweepRequest
+    from app.solvers.fourbar import analyze_four_bar_sweep
+
+    payload = sweep_payload()
+    payload["theta2_step_deg"] = 0
+
+    response = analyze_four_bar_sweep(FourBarSweepRequest(**payload))
+
+    assert response.sample_count == 0
+    assert response.samples == []
+    assert any("nonzero" in note for note in response.notes)
+
+
+def test_sweep_sample_limit_is_enforced():
+    from app.models import FourBarSweepRequest
+    from app.solvers.fourbar import analyze_four_bar_sweep
+
+    payload = sweep_payload()
+    payload.update({"theta2_start_deg": 0, "theta2_end_deg": 1000, "theta2_step_deg": 1})
+
+    response = analyze_four_bar_sweep(FourBarSweepRequest(**payload))
+
+    assert response.sample_count == 0
+    assert any("maximum supported sample count" in note for note in response.notes)
+
+
+def test_sweep_endpoint():
+    client = TestClient(app)
+
+    response = client.post("/api/mechanisms/fourbar/sweep", json=sweep_payload())
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["mechanism"] == "four_bar_linkage"
+    assert data["sample_count"] == 4
+    assert data["valid_sample_count"] + data["invalid_sample_count"] == data["sample_count"]
