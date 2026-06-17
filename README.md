@@ -67,11 +67,18 @@ The repository includes a root `vercel.json` that deploys the `frontend/` Next.j
 5. Leave `NEXT_PUBLIC_API_BASE_URL` unset when using the same-domain Vercel backend; frontend calls will use relative `/api/...` paths on the same public Vercel link.
 6. Set `NEXT_PUBLIC_API_BASE_URL` only when using an external hosted backend.
 
-With this setup, `/` loads the MechSynthCAD frontend and `/api/...` requests are routed to the FastAPI backend. If Vercel detects multiple services during import, keep Root Directory as `./` and ensure the root `vercel.json` is present. Vercel multi-service deployment uses frontend `routePrefix` `/` and backend `routePrefix` `/api`; the `api/index.py` entrypoint restores the `/api` prefix before forwarding requests to the existing FastAPI app so existing route definitions remain unchanged.
+With this setup, `/` loads the MechSynthCAD frontend and `/api/...` requests are routed to the FastAPI backend. If Vercel detects multiple services during import, keep Root Directory as `./` and ensure the root `vercel.json` is present. Vercel multi-service deployment uses frontend `routePrefix` `/` and backend `routePrefix` `/api`, while the FastAPI app exposes both the public `/api/...` route shape and non-prefixed aliases for Vercel service forwarding compatibility.
 
 ### Vercel API 404 Troubleshooting
 
-After deployment, open `https://your-project.vercel.app/api/health`. It should return `{ "status": "ok", "service": "MechSynthCAD API" }`. If frontend actions such as Run Analysis or Run Simulation still return 404, verify that Vercel routes `/api/...` requests to the FastAPI service and that the entrypoint prefix wrapper is active.
+The Vercel backend exposes both `/api/...` routes and non-prefixed aliases because Vercel service `routePrefix` behavior may strip `/api` before requests reach FastAPI. Public frontend calls remain `/api/...`; do not change frontend endpoint paths for same-domain Vercel deployments.
+
+After deployment, test these URLs:
+
+- `https://your-project.vercel.app/api/health`
+- `https://your-project.vercel.app/api/debug/scope`
+
+`/api/health` should return `{ "status": "ok", "service": "MechSynthCAD API" }`, and `/api/debug/scope` should return `{ "status": "ok", "message": "MechSynthCAD API debug route reached" }`. If frontend actions such as Run Analysis or Run Simulation still return 404, verify that Vercel routes `/api/...` requests to the FastAPI service with backend `routePrefix` set to `/api`.
 
 ### Local Development API URL
 
