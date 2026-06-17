@@ -73,3 +73,19 @@ export type FourBarSweepResponse = {
   samples: FourBarSweepSample[];
   notes: string[];
 };
+
+export type FourBarForm = {
+  l1: number;
+  l2: number;
+  l3: number;
+  l4: number;
+  theta2_deg: number;
+  omega2: number;
+  alpha2: number;
+};
+
+export type SweepForm = {
+  theta2_start_deg: number;
+  theta2_end_deg: number;
+  theta2_step_deg: number;
+};
