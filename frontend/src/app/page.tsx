@@ -12,24 +12,6 @@ type FourBarForm = {
   alpha2: number;
 };
 
-type FourBarResult = {
-  mechanism: string;
-  valid: boolean;
-  grashof_status: string;
-  mobility: number;
-  classification: string;
-  theta2_deg: number;
-  theta3_deg: number | null;
-  theta4_deg: number | null;
-  joint_coordinates: {
-    A: [number, number];
-    B: [number, number];
-    C: [number, number] | null;
-    D: [number, number];
-  };
-  notes: string[];
-};
-
 const initialForm: FourBarForm = {
   l1: 120,
   l2: 35,
@@ -52,7 +34,7 @@ const fields: Array<{ key: keyof FourBarForm; label: string; unit: string }> = [
 
 export default function Home() {
   const [form, setForm] = useState<FourBarForm>(initialForm);
-  const [result, setResult] = useState<FourBarResult | null>(null);
+  const [result, setResult] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +54,7 @@ export default function Home() {
         throw new Error(`Backend returned ${response.status}`);
       }
 
-      setResult((await response.json()) as FourBarResult);
+      setResult(await response.json());
     } catch (analysisError) {
       setError(analysisError instanceof Error ? analysisError.message : "Unable to run analysis");
       setResult(null);
@@ -152,39 +134,8 @@ export default function Home() {
 
           {error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-          {result && (
-            <div className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-600">Valid analysis</span>
-                <span className={result.valid ? "font-semibold text-emerald-700" : "font-semibold text-red-700"}>{result.valid ? "Yes" : "No"}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-slate-500">Grashof status</p>
-                  <p className="font-semibold">{result.grashof_status}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Classification</p>
-                  <p className="font-semibold">{result.classification}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">θ3</p>
-                  <p className="font-semibold">{result.theta3_deg ?? "N/A"} deg</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">θ4</p>
-                  <p className="font-semibold">{result.theta4_deg ?? "N/A"} deg</p>
-                </div>
-              </div>
-              <div>
-                <p className="text-slate-500">Joint coordinates</p>
-                <pre className="mt-2 overflow-auto rounded-lg bg-slate-900 p-3 text-xs text-slate-100">{JSON.stringify(result.joint_coordinates, null, 2)}</pre>
-              </div>
-            </div>
-          )}
-
-          <pre className="mt-4 min-h-[220px] overflow-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
-            {result ? JSON.stringify(result, null, 2) : "Run an analysis to display the deterministic four-bar position analysis response."}
+          <pre className="mt-4 min-h-[320px] overflow-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
+            {result ? JSON.stringify(result, null, 2) : "Run an analysis to display the scaffold API response."}
           </pre>
 
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">

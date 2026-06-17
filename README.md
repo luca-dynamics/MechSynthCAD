@@ -4,9 +4,9 @@
 
 **Product name:** MechSynthCAD
 
-MechSynthCAD is a Mechanical Engineering final-year project framed as a CAD-based engineering software tool for planar mechanism analysis and synthesis. The system combines a web-based engineering dashboard, a Python API, a deterministic kinematic solver, CAD-style visualization, and an assistive AI layer for explanations and reporting.
+MechSynthCAD is a Mechanical Engineering final-year project framed as a CAD-based engineering software tool for planar mechanism analysis and synthesis. The system combines a web-based engineering dashboard, a Python API, a planned deterministic kinematic solver, CAD-style visualization, and an assistive AI layer for explanations and reporting.
 
-The AI layer is intentionally supportive only. Core engineering calculations are performed by deterministic mathematical methods so outputs remain reproducible, testable, and suitable for engineering validation.
+The AI layer is intentionally supportive only. Core engineering calculations will be performed by deterministic mathematical methods so outputs remain reproducible, testable, and suitable for engineering validation.
 
 ## Technology Stack
 
@@ -14,8 +14,7 @@ The AI layer is intentionally supportive only. Core engineering calculations are
 - TypeScript
 - Tailwind CSS
 - FastAPI backend
-- Deterministic Python mathematical engine for four-bar position analysis
-- NumPy, SciPy, and SymPy planned for expanded mathematical analysis
+- NumPy, SciPy, and SymPy planned for the mathematical engine
 - AI assistant layer planned for explanation, validation support, and report generation
 
 ## Repository Structure
@@ -59,7 +58,7 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoint at `
 ## Development Roadmap
 
 1. PR 1: Initial scaffold, dashboard layout, API contract, and documentation
-2. PR 2: Four-bar mathematical engine for deterministic position analysis
+2. PR 2: Four-bar mathematical engine
 3. PR 3: SVG CAD visualization
 4. PR 4: Simulation and graphing
 5. PR 5: Velocity and acceleration analysis
@@ -69,6 +68,4 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoint at `
 
 ## Current Scope
 
-PR 2 introduces deterministic backend four-bar position analysis. The solver computes Grashof status, mobility, open-configuration joint coordinates, and theta3/theta4 values from deterministic geometry. Velocity and acceleration values are still accepted in the request for API continuity, but velocity and acceleration analysis will not be solved until PR 5.
-
-The project still does not include real AI API integration, report generation, slider-crank analysis, or the full CAD-style SVG visualization. AI remains assistive only and does not perform core engineering calculations.
+This scaffold does not implement the full kinematic solver or any real AI API integration. It establishes the project structure, local developer setup, frontend layout, backend endpoints, and documentation for future development.
