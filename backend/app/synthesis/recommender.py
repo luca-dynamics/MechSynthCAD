@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.synthesis.schemas import SynthesisRecommendation, SynthesisRequest, SynthesisResponse, SynthesisTarget
+from .schemas import SynthesisRecommendation, SynthesisRequest, SynthesisResponse, SynthesisTarget
 
 FOUR_BAR_METRICS = {"theta4_deg", "theta3_deg", "transmission_quality", "valid_sample_count", "invalid_sample_count"}
 SLIDER_CRANK_METRICS = {"slider_position", "transmission_angle_deg", "slider_velocity", "slider_acceleration", "valid_sample_count", "invalid_sample_count"}

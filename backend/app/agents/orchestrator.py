@@ -1,7 +1,7 @@
-from app.agents.prompts import SYSTEM_BOUNDARY
-from app.agents.schemas import AgentWorkflowRequest, AgentWorkflowResponse, AgentWorkflowStep, SelectedMechanismType
-from app.agents.tool_registry import describe_tool
-from app.agents.validators import REQUIRED_INPUTS, missing_required_inputs
+from .prompts import SYSTEM_BOUNDARY
+from .schemas import AgentWorkflowRequest, AgentWorkflowResponse, AgentWorkflowStep, SelectedMechanismType
+from .tool_registry import describe_tool
+from .validators import REQUIRED_INPUTS, missing_required_inputs
 
 
 def _select_mechanism(request: AgentWorkflowRequest) -> SelectedMechanismType:

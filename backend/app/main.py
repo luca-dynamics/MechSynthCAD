@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agents import AgentWorkflowRequest, AgentWorkflowResponse, run_agent_workflow
-from app.reports import ReportRequest, ReportResponse, generate_mechanism_report
-from app.synthesis import SynthesisRequest, SynthesisResponse, generate_synthesis_recommendations
-from app.models import (
+from .agents import AgentWorkflowRequest, AgentWorkflowResponse, run_agent_workflow
+from .reports import ReportRequest, ReportResponse, generate_mechanism_report
+from .synthesis import SynthesisRequest, SynthesisResponse, generate_synthesis_recommendations
+from .models import (
     FourBarAnalyzeRequest,
     FourBarAnalyzeResponse,
     FourBarSweepRequest,
@@ -14,8 +14,8 @@ from app.models import (
     SliderCrankSweepRequest,
     SliderCrankSweepResponse,
 )
-from app.solvers.fourbar import analyze_four_bar, analyze_four_bar_sweep
-from app.solvers.slider_crank import analyze_slider_crank, analyze_slider_crank_sweep
+from .solvers.fourbar import analyze_four_bar, analyze_four_bar_sweep
+from .solvers.slider_crank import analyze_slider_crank, analyze_slider_crank_sweep
 
 app = FastAPI(
     title="MechSynthCAD API",

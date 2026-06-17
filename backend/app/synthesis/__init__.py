@@ -1,5 +1,5 @@
-from app.synthesis.recommender import generate_synthesis_recommendations
-from app.synthesis.schemas import (
+from .recommender import generate_synthesis_recommendations
+from .schemas import (
     SynthesisMechanismType,
     SynthesisRecommendation,
     SynthesisRequest,
