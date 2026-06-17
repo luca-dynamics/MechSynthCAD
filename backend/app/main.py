@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.agents import AgentWorkflowRequest, AgentWorkflowResponse, run_agent_workflow
 from app.reports import ReportRequest, ReportResponse, generate_mechanism_report
+from app.synthesis import SynthesisRequest, SynthesisResponse, generate_synthesis_recommendations
 from app.models import (
     FourBarAnalyzeRequest,
     FourBarAnalyzeResponse,
@@ -60,3 +61,8 @@ def run_mechanism_agent_workflow_endpoint(request: AgentWorkflowRequest) -> Agen
 @app.post("/api/reports/mechanism", response_model=ReportResponse)
 def generate_mechanism_report_endpoint(request: ReportRequest) -> ReportResponse:
     return generate_mechanism_report(request)
+
+
+@app.post("/api/synthesis/recommendations", response_model=SynthesisResponse)
+def generate_synthesis_recommendations_endpoint(request: SynthesisRequest) -> SynthesisResponse:
+    return generate_synthesis_recommendations(request)

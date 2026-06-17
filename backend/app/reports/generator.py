@@ -48,6 +48,26 @@ def _workflow_bullets(workflow: dict[str, Any]) -> list[str]:
     return bullets or ["Agent workflow was supplied but did not contain report-ready summary fields."]
 
 
+
+def _synthesis_bullets(synthesis: dict[str, Any]) -> list[str]:
+    bullets: list[str] = []
+    for key in ["target_gaps", "next_solver_actions", "safety_notes"]:
+        values = synthesis.get(key)
+        if isinstance(values, list):
+            bullets.extend(_bullet(key.replace("_", " ").title(), value) for value in values)
+    recommendations = synthesis.get("recommendations")
+    if isinstance(recommendations, list):
+        for recommendation in recommendations:
+            if isinstance(recommendation, dict):
+                parameter = recommendation.get("parameter", "parameter")
+                direction = recommendation.get("suggested_direction", "review")
+                reason = recommendation.get("reason", "No reason supplied")
+                rerun = recommendation.get("requires_solver_rerun", True)
+                bullets.append(f"Recommendation: {parameter} — {direction}; {reason}; requires deterministic solver rerun: {rerun}")
+            else:
+                bullets.append(_bullet("Recommendation", recommendation))
+    return bullets or ["Synthesis recommendations were supplied but no report-ready fields were found."]
+
 def _markdown(title: str, sections: list[ReportSection]) -> str:
     lines = [f"# {title}", ""]
     for section in sections:
@@ -93,6 +113,8 @@ def generate_mechanism_report(request: ReportRequest) -> ReportResponse:
         sections.append(_section("Sweep / Simulation Summary", "Sweep or simulation data was supplied for report context.", [_bullet(field, _value(sweep, field)) for field in (["sample_count", "valid_sample_count", "invalid_sample_count", "grashof_status", "classification"] if request.mechanism_type == "four_bar" else ["sample_count", "valid_sample_count", "invalid_sample_count"])]))
     if request.agent_workflow is not None:
         sections.append(_section("Agentic Engineering Workflow Summary", "Agent workflow summary supplied for engineering interpretation; numerical values still originate from deterministic solvers.", _workflow_bullets(request.agent_workflow)))
+    if request.synthesis_recommendations is not None:
+        sections.append(_section("Synthesis / Design Iteration Recommendations", "Deterministic synthesis assistance compares supplied solver outputs against target goals and gives parameter-adjustment directions only.", _synthesis_bullets(request.synthesis_recommendations)))
 
     recommendations = []
     if request.agent_workflow and isinstance(request.agent_workflow.get("design_recommendations"), list):

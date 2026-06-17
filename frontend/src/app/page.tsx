@@ -12,7 +12,7 @@ import { SliderCrankSimulationControls } from "@/components/SliderCrankSimulatio
 import { SliderCrankWorkspace } from "@/components/SliderCrankWorkspace";
 import { WorkflowAndReportSection } from "@/components/WorkflowAndReportSection";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar, sweepSliderCrank } from "@/lib/api";
-import type { AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm } from "@/types";
+import type { AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm, SynthesisResponse } from "@/types";
 
 const initialForm: FourBarForm = { l1: 120, l2: 35, l3: 90, l4: 80, theta2_deg: 30, omega2: 10, alpha2: 0 };
 const initialSweep: SweepForm = { theta2_start_deg: 0, theta2_end_deg: 360, theta2_step_deg: 10 };
@@ -40,6 +40,7 @@ export default function Home() {
   const [isSliderCrankLoading, setIsSliderCrankLoading] = useState(false);
   const [sliderCrankError, setSliderCrankError] = useState<string | null>(null);
   const [latestWorkflow, setLatestWorkflow] = useState<AgentWorkflowResponse | null>(null);
+  const [latestSynthesisRecommendations, setLatestSynthesisRecommendations] = useState<SynthesisResponse | null>(null);
 
   const selectedSample = sweepResult?.samples[selectedSampleIndex] ?? null;
   const displayResult = useMemo<FourBarAnalysisResult | null>(() => {
@@ -145,7 +146,7 @@ export default function Home() {
         {selectedMechanism === "four_bar" ? <ResultsPanel error={error} displayResult={displayResult} result={result} sweepResult={sweepResult} /> : <SliderCrankResultsPanel error={sliderCrankError} result={displaySliderCrankResult} sweepResult={sliderCrankSweepResult} selectedSampleIndex={selectedSliderCrankSampleIndex} />}
       </section>
       <section className="px-6 pb-8">
-        <WorkflowAndReportSection selectedMechanism={selectedMechanism} availableContext={agentAvailableContext} solverResult={reportSolverResult as Record<string, unknown> | null} inputParameters={reportInputParameters} sweepResult={reportSweepResult as Record<string, unknown> | null} latestWorkflow={latestWorkflow} onWorkflowComplete={setLatestWorkflow} />
+        <WorkflowAndReportSection selectedMechanism={selectedMechanism} availableContext={agentAvailableContext} solverResult={reportSolverResult as Record<string, unknown> | null} inputParameters={reportInputParameters} sweepResult={reportSweepResult as Record<string, unknown> | null} latestWorkflow={latestWorkflow} onWorkflowComplete={setLatestWorkflow} latestSynthesisRecommendations={latestSynthesisRecommendations} onSynthesisRecommendationsGenerated={setLatestSynthesisRecommendations} />
       </section>
     </main>
   );
