@@ -61,7 +61,7 @@ PR 10 adds a dedicated report package at `backend/app/reports/` with typed schem
 
 The report endpoint, `POST /api/reports/mechanism`, accepts the selected mechanism type, input parameters, optional deterministic solver result, optional sweep result, and optional agent workflow summary. It returns structured report sections plus a markdown preview generated from the same section data. Report content can reference only supplied inputs, deterministic solver outputs, and supplied workflow summaries. Missing numerical values are rendered as `N/A`; the generator does not synthesize or infer unprovided engineering numbers.
 
-The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and slider-crank workflows. It renders report title, validation notes, structured sections, and a clearly separated markdown preview. The panel explicitly communicates that numerical values originate from solver outputs. PR 11 adds browser-side markdown report download from the already-generated `report.markdown` string using a Blob/ObjectURL, so no server-side file generation or second backend call is needed. PDF export remains deferred.
+The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and slider-crank workflows. It renders report title, validation notes, structured sections, and a clearly separated markdown preview. The panel explicitly communicates that numerical values originate from solver outputs. PR 11 adds browser-side markdown report download from the already-generated `report.markdown` string using a Blob/ObjectURL, so no server-side file generation or second backend call is needed. PR 12 adds browser-side print/save-as-PDF export from the existing rendered report preview through the native browser print dialog. It does not add backend PDF generation, heavy PDF dependencies, server-side rendering, or an additional report-generation call.
 
 
 ## PR 11 Markdown Export and Page Structure Cleanup
@@ -69,3 +69,10 @@ The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and 
 PR 11 adds browser-side markdown report download for both four-bar and slider-crank reports. The export uses the existing markdown returned by `POST /api/reports/mechanism`, creates a local `.md` file in the browser, and does not introduce PDF generation or any server-side file-generation endpoint.
 
 The frontend page structure is also cleaned up so `frontend/src/app/page.tsx` remains an orchestration layer for state, derived solver/report context, and API actions. The mechanism selector, slider-crank CAD visualization workspace, and combined workflow/report section now live in dedicated reusable components.
+
+
+## PR 12 Browser-Side Report Print Export
+
+PR 12 keeps PDF export in the frontend by relying on the browser print dialog and its built-in **Save as PDF** option. The `ReportPreviewPanel` shows the print action only after a report exists, and the print action uses the existing preview content instead of calling the report endpoint again.
+
+Print-specific CSS isolates the report area, hides app chrome and interactive controls, removes dark or decorative styling, hides the markdown preview by default, and adds academic print header/footer notes. Markdown export from PR 11 remains available as a separate browser-side `.md` download. The printed report is therefore traceable to deterministic solver outputs and the structured generated preview, with no backend PDF pipeline or heavy PDF dependency.

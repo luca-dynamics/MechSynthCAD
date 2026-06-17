@@ -68,6 +68,7 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoints at 
 9. PR 9: Agentic AI engineering workflow layer
 10. PR 10: Report generation
 11. PR 11: Browser-side markdown report download and frontend page structure cleanup
+12. PR 12: Browser-side print/save-as-PDF workflow for generated engineering reports
 
 ## Current Scope
 
@@ -85,4 +86,11 @@ The agent layer does **not** calculate kinematic values. Four-bar and slider-cra
 
 PR 10 adds a structured engineering report preview workflow. The backend now exposes `POST /api/reports/mechanism`, which converts supplied mechanism inputs, deterministic solver outputs, optional four-bar sweep data, and optional agent workflow summaries into typed report sections and markdown preview text.
 
-The report generator is intentionally separate from solvers and agents. It does not run new kinematic calculations and does not invent engineering numbers: missing or null values are shown as `N/A`, and deterministic solver outputs remain the numerical source of truth. The frontend adds an Engineering Report Preview panel for both four-bar and slider-crank workflows. PR 11 adds browser-side markdown download from the existing preview without server-side file generation or additional report API calls. PDF export remains deferred. PR 11 also keeps the frontend page orchestration lean by extracting the mechanism selector, slider-crank visualization workspace, and workflow/report section into reusable components.
+The report generator is intentionally separate from solvers and agents. It does not run new kinematic calculations and does not invent engineering numbers: missing or null values are shown as `N/A`, and deterministic solver outputs remain the numerical source of truth. The frontend adds an Engineering Report Preview panel for both four-bar and slider-crank workflows. PR 11 adds browser-side markdown download from the existing preview without server-side file generation or additional report API calls. PR 12 adds browser-side print/save-as-PDF export from the already-generated report preview using the native browser print dialog, so users can choose “Save as PDF” without backend PDF generation, heavy PDF dependencies, or a second report API call. The printable report remains based on deterministic solver outputs and the existing preview content. PR 11 also keeps the frontend page orchestration lean by extracting the mechanism selector, slider-crank visualization workspace, and workflow/report section into reusable components.
+
+
+## PR 12 Browser Print / Save-as-PDF Export
+
+PR 12 adds a frontend-only print workflow for generated engineering reports. After a report preview exists, the frontend exposes a **Print / Save as PDF** action that calls the browser native print dialog; users can select **Save as PDF** from that dialog. The app does not add backend PDF generation, server-side file generation, or heavy PDF libraries.
+
+The print output is based on the existing generated report preview and deterministic solver outputs. It does not regenerate reports, recalculate mechanisms, or invent engineering values. Browser-side Markdown export from PR 11 remains available and still downloads the existing `report.markdown` content as a `.md` file.

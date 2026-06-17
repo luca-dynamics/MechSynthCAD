@@ -11,6 +11,7 @@ type ReportPreviewPanelProps = {
 };
 
 export function ReportPreviewPanel({ mechanismType, inputParameters, solverResult, sweepResult, agentWorkflow }: ReportPreviewPanelProps) {
+  const displayMechanismType = mechanismType.replace("_", "-");
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +34,11 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
     URL.revokeObjectURL(objectUrl);
   }
 
+  function printReport() {
+    if (!report) return;
+    window.print();
+  }
+
   async function generateReport() {
     setIsLoading(true);
     setError(null);
@@ -47,26 +53,42 @@ export function ReportPreviewPanel({ mechanismType, inputParameters, solverResul
   }
 
   return (
-    <section className="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
+    <section className="report-preview-panel rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Engineering Report Preview</p>
           <h2 className="mt-1 text-xl font-bold text-slate-950">Structured report generation</h2>
           <p className="mt-2 text-sm text-slate-600">Generated from deterministic solver output and agent workflow summary. Numerical values originate from solver outputs.</p>
-          <p className="mt-1 text-sm font-semibold text-emerald-700">Markdown export available. PDF export deferred.</p>
+          <p className="mt-1 text-sm font-semibold text-emerald-700">Markdown export and browser print/save-as-PDF are available after generation.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="report-actions flex flex-wrap items-center gap-2">
           <button type="button" className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:bg-emerald-300" onClick={generateReport} disabled={isLoading}>{isLoading ? "Generating..." : "Generate Engineering Report"}</button>
-          {report ? <button type="button" className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50" onClick={downloadMarkdownReport}>Download Markdown Report</button> : null}
+          {report ? (
+            <>
+              <button type="button" className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50" onClick={downloadMarkdownReport}>Download Markdown Report</button>
+              <button type="button" className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50" onClick={printReport}>Print / Save as PDF</button>
+              <p className="basis-full text-xs text-slate-500">Uses your browser print dialog. Choose “Save as PDF” to export.</p>
+            </>
+          ) : null}
         </div>
       </div>
       {error ? <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
       {report ? (
-        <div className="mt-5 space-y-5 border-t border-slate-200 pt-5">
-          <div><h3 className="text-2xl font-bold text-slate-950">{report.title}</h3><p className="mt-1 text-sm text-slate-500">Mechanism: {report.mechanism_type.replace("_", "-")}</p></div>
+        <div className="print-report-area mt-5 space-y-5 border-t border-slate-200 pt-5" data-print-report="true">
+          <div className="print-only">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em]">MechSynthCAD Engineering Report</p>
+            <p>Academic Project: AI-Assisted CAD-Based System for Kinematic Analysis and Synthesis of Planar Mechanisms</p>
+            <p>Mechanism type: {displayMechanismType}</p>
+            <p>Generated from deterministic solver outputs</p>
+          </div>
+          <div><h3 className="text-2xl font-bold text-slate-950">{report.title}</h3><p className="mt-1 text-sm text-slate-500">Mechanism: {displayMechanismType}</p></div>
           {report.validation_notes.length > 0 ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4"><h4 className="text-sm font-semibold uppercase tracking-wide text-amber-800">Validation notes</h4><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900">{report.validation_notes.map((note) => <li key={note}>{note}</li>)}</ul></div> : null}
-          <div className="space-y-4">{report.sections.map((section) => <article key={section.heading} className="rounded-xl border border-slate-200 p-4"><h4 className="text-lg font-semibold text-slate-950">{section.heading}</h4><p className="mt-2 text-sm text-slate-700">{section.content}</p>{section.bullets.length > 0 ? <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul> : null}</article>)}</div>
-          <details className="rounded-xl border border-slate-200 bg-slate-50 p-4"><summary className="cursor-pointer text-sm font-semibold text-slate-800">Markdown preview</summary><pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-slate-700">{report.markdown}</pre></details>
+          <div className="space-y-4">{report.sections.map((section) => <article key={section.heading} className="report-section rounded-xl border border-slate-200 p-4"><h4 className="text-lg font-semibold text-slate-950">{section.heading}</h4><p className="mt-2 text-sm text-slate-700">{section.content}</p>{section.bullets.length > 0 ? <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul> : null}</article>)}</div>
+          <details className="report-markdown-preview rounded-xl border border-slate-200 bg-slate-50 p-4"><summary className="cursor-pointer text-sm font-semibold text-slate-800">Markdown preview</summary><pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap text-xs text-slate-700">{report.markdown}</pre></details>
+          <div className="print-only">
+            <p>Numerical values originate from deterministic solver outputs.</p>
+            <p>Independent engineering verification is required before real-world use.</p>
+          </div>
         </div>
       ) : null}
     </section>
