@@ -4,7 +4,7 @@
 
 **Product name:** MechSynthCAD
 
-MechSynthCAD is a Mechanical Engineering final-year project framed as a CAD-based engineering software tool for planar mechanism analysis and synthesis. The system combines a web-based engineering dashboard, a Python API, a planned deterministic kinematic solver, CAD-style visualization, and an assistive AI layer for explanations and reporting.
+MechSynthCAD is a Mechanical Engineering final-year project framed as a CAD-based engineering software tool for planar mechanism analysis and synthesis. The system combines a web-based engineering dashboard, a Python API, a deterministic kinematic solver, CAD-style visualization, and an assistive AI layer for explanations and reporting.
 
 The AI layer is intentionally supportive only. Core engineering calculations will be performed by deterministic mathematical methods so outputs remain reproducible, testable, and suitable for engineering validation.
 
@@ -14,7 +14,7 @@ The AI layer is intentionally supportive only. Core engineering calculations wil
 - TypeScript
 - Tailwind CSS
 - FastAPI backend
-- NumPy, SciPy, and SymPy planned for the mathematical engine
+- Deterministic four-bar position analysis backend
 - AI assistant layer planned for explanation, validation support, and report generation
 
 ## Repository Structure
@@ -59,13 +59,14 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoint at `
 
 1. PR 1: Initial scaffold, dashboard layout, API contract, and documentation
 2. PR 2: Four-bar mathematical engine
-3. PR 3: SVG CAD visualization
-4. PR 4: Simulation and graphing
-5. PR 5: Velocity and acceleration analysis
-6. PR 6: Slider-crank module
-7. PR 7: AI explanation module
-8. PR 8: Report generation
+3. PR 3: FastAPI endpoint wired to the deterministic four-bar solver
+4. PR 4: Real frontend SVG CAD-style visualization from backend joint coordinates
+5. PR 5: Simulation and graphing
+6. PR 6: Velocity and acceleration analysis
+7. PR 7: Slider-crank module
+8. PR 8: AI explanation module
+9. PR 9: Report generation
 
 ## Current Scope
 
-This scaffold does not implement the full kinematic solver or any real AI API integration. It establishes the project structure, local developer setup, frontend layout, backend endpoints, and documentation for future development.
+The current scope includes deterministic four-bar position analysis exposed through FastAPI and a frontend SVG renderer that draws the linkage from backend `joint_coordinates`. PR 4 adds a standalone 2D computer-aided mechanism visualization layer for planar linkage analysis; it is not a full industrial CAD kernel. The project still does not include real AI API integration, animation, graphing, slider-crank analysis, or report generation.

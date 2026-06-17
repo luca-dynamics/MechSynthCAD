@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { FourBarSvg } from "@/components/FourBarSvg";
+import type { FourBarAnalysisResult } from "@/types";
 
 type FourBarForm = {
   l1: number;
@@ -34,7 +36,7 @@ const fields: Array<{ key: keyof FourBarForm; label: string; unit: string }> = [
 
 export default function Home() {
   const [form, setForm] = useState<FourBarForm>(initialForm);
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<FourBarAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +56,7 @@ export default function Home() {
         throw new Error(`Backend returned ${response.status}`);
       }
 
-      setResult(await response.json());
+      setResult((await response.json()) as FourBarAnalysisResult);
     } catch (analysisError) {
       setError(analysisError instanceof Error ? analysisError.message : "Unable to run analysis");
       setResult(null);
@@ -107,24 +109,13 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">CAD-Style 2D Visualization</h2>
-              <p className="text-sm text-slate-300">SVG mechanism workspace placeholder</p>
+              <p className="text-sm text-slate-300">Deterministic backend joint coordinates rendered as SVG geometry</p>
             </div>
-            <span className="rounded-full border border-sky-300/50 px-3 py-1 text-xs uppercase tracking-widest text-sky-100">Draft View</span>
+            <span className="rounded-full border border-sky-300/50 px-3 py-1 text-xs uppercase tracking-widest text-sky-100">Solver View</span>
           </div>
 
           <div className="mt-5 h-[620px] rounded-xl border border-sky-200/30 bg-[linear-gradient(to_right,var(--tw-gradient-stops)),linear-gradient(to_bottom,var(--tw-gradient-stops))] from-gridline to-gridline bg-[length:32px_32px] p-8">
-            <svg className="h-full w-full" viewBox="0 0 640 420" role="img" aria-label="Four-bar linkage placeholder drawing">
-              <line x1="120" y1="310" x2="520" y2="310" stroke="#38bdf8" strokeWidth="4" />
-              <line x1="120" y1="310" x2="230" y2="220" stroke="#facc15" strokeWidth="6" />
-              <line x1="230" y1="220" x2="430" y2="190" stroke="#fb7185" strokeWidth="6" />
-              <line x1="430" y1="190" x2="520" y2="310" stroke="#34d399" strokeWidth="6" />
-              {[ [120, 310, "A"], [230, 220, "B"], [430, 190, "C"], [520, 310, "D"] ].map(([x, y, label]) => (
-                <g key={label}>
-                  <circle cx={x} cy={y} r="10" fill="#e0f2fe" stroke="#0284c7" strokeWidth="3" />
-                  <text x={Number(x) + 14} y={Number(y) - 12} fill="#e0f2fe" fontSize="18" fontWeight="700">{label}</text>
-                </g>
-              ))}
-            </svg>
+            <FourBarSvg result={result} />
           </div>
         </section>
 
@@ -133,6 +124,34 @@ export default function Home() {
           <p className="mt-1 text-sm text-slate-500">Backend JSON response and future assistive explanation space.</p>
 
           {error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+          {result && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <h3 className="font-semibold text-slate-900">Structured Solver Summary</h3>
+              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2">
+                <dt className="font-medium">Valid</dt>
+                <dd>{String(result.valid)}</dd>
+                <dt className="font-medium">Grashof status</dt>
+                <dd>{result.grashof_status}</dd>
+                <dt className="font-medium">Classification</dt>
+                <dd>{result.classification}</dd>
+                <dt className="font-medium">θ3</dt>
+                <dd>{result.theta3_deg === null ? "N/A" : `${result.theta3_deg}°`}</dd>
+                <dt className="font-medium">θ4</dt>
+                <dd>{result.theta4_deg === null ? "N/A" : `${result.theta4_deg}°`}</dd>
+              </dl>
+              {result.notes.length > 0 && (
+                <div className="mt-3">
+                  <p className="font-medium text-slate-900">Backend notes</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    {result.notes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
           <pre className="mt-4 min-h-[320px] overflow-auto rounded-xl bg-slate-950 p-4 text-sm text-slate-100">
             {result ? JSON.stringify(result, null, 2) : "Run an analysis to display the scaffold API response."}
