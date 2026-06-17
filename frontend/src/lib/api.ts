@@ -1,4 +1,4 @@
-import type { AgentWorkflowRequest, AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepRequest, FourBarSweepResponse, ReportRequest, ReportResponse, SliderCrankAnalysisResult, SliderCrankForm } from "@/types";
+import type { AgentWorkflowRequest, AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepRequest, FourBarSweepResponse, ReportRequest, ReportResponse, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepRequest, SliderCrankSweepResponse } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -36,6 +36,19 @@ export async function analyzeSliderCrank(form: SliderCrankForm): Promise<SliderC
   if (!response.ok) throw new Error(`Backend returned ${response.status}`);
 
   return (await response.json()) as SliderCrankAnalysisResult;
+}
+
+
+export async function sweepSliderCrank(payload: SliderCrankSweepRequest): Promise<SliderCrankSweepResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/mechanisms/slider-crank/sweep`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) throw new Error(`Backend returned ${response.status}`);
+
+  return (await response.json()) as SliderCrankSweepResponse;
 }
 
 

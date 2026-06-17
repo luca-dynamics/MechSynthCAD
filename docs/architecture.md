@@ -76,3 +76,9 @@ The frontend page structure is also cleaned up so `frontend/src/app/page.tsx` re
 PR 12 keeps PDF export in the frontend by relying on the browser print dialog and its built-in **Save as PDF** option. The `ReportPreviewPanel` shows the print action only after a report exists, and the print action uses the existing preview content instead of calling the report endpoint again.
 
 Print-specific CSS isolates the report area, hides app chrome and interactive controls, removes dark or decorative styling, hides the markdown preview by default, and adds academic print header/footer notes. Markdown export from PR 11 remains available as a separate browser-side `.md` download. The printed report is therefore traceable to deterministic solver outputs and the structured generated preview, with no backend PDF pipeline or heavy PDF dependency.
+
+## PR 13 slider-crank sweep architecture
+
+Slider-crank sweep simulation is implemented as a deterministic backend workflow. `POST /api/mechanisms/slider-crank/sweep` accepts a crank-angle range and calls the existing single-angle slider-crank solver for each generated sample rather than duplicating formulas or using AI for calculations. Invalid samples are preserved in the response, and sample counts are capped to protect the API from accidental excessive sweeps.
+
+The frontend mirrors four-bar simulation behavior for slider-crank mechanisms with dedicated sweep controls, SVG animation controls, and a lightweight graph of slider position versus crank angle. Report context can include slider-crank sweep summaries, limited to values supplied by deterministic solver responses.

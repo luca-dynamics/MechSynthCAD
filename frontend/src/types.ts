@@ -192,3 +192,40 @@ export type ReportResponse = {
   markdown: string;
   validation_notes: string[];
 };
+
+export type SliderCrankSweepForm = {
+  theta_start_deg: number;
+  theta_end_deg: number;
+  theta_step_deg: number;
+};
+
+export type SliderCrankSweepRequest = {
+  crank_radius: number;
+  connecting_rod_length: number;
+  theta_start_deg: number;
+  theta_end_deg: number;
+  theta_step_deg: number;
+  omega: number;
+  alpha: number;
+  offset: number;
+};
+
+export type SliderCrankSweepSample = {
+  theta_deg: number;
+  valid: boolean;
+  slider_position: number | null;
+  transmission_angle_deg: number | null;
+  joint_coordinates: SliderCrankJointCoordinates;
+  velocity_analysis: SliderCrankVelocityAnalysis;
+  acceleration_analysis: SliderCrankAccelerationAnalysis;
+  notes: string[];
+};
+
+export type SliderCrankSweepResponse = {
+  mechanism: "slider_crank";
+  sample_count: number;
+  valid_sample_count: number;
+  invalid_sample_count: number;
+  samples: SliderCrankSweepSample[];
+  notes: string[];
+};

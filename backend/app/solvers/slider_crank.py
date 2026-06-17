@@ -7,6 +7,9 @@ from app.models import (
     SliderCrankAnalyzeRequest,
     SliderCrankAnalyzeResponse,
     SliderCrankJointCoordinates,
+    SliderCrankSweepRequest,
+    SliderCrankSweepResponse,
+    SliderCrankSweepSample,
     SliderCrankVelocityAnalysis,
 )
 
@@ -134,3 +137,53 @@ def analyze_slider_crank(request: SliderCrankAnalyzeRequest) -> SliderCrankAnaly
         acceleration_analysis=acceleration_analysis,
         notes=notes,
     )
+
+
+MAX_SWEEP_SAMPLES = 1000
+ANGLE_TOLERANCE = 1e-7
+
+
+def _build_sweep_angles(start: float, end: float, step: float) -> list[float]:
+    if math.isclose(step, 0.0, abs_tol=TOLERANCE):
+        raise ValueError("theta_step_deg must be nonzero.")
+
+    direction = 1 if end >= start else -1
+    signed_step = abs(step) * direction
+    angles: list[float] = []
+    current = start
+
+    while (current <= end + ANGLE_TOLERANCE) if direction > 0 else (current >= end - ANGLE_TOLERANCE):
+        if len(angles) >= MAX_SWEEP_SAMPLES:
+            raise ValueError(f"Sweep exceeds maximum supported sample count of {MAX_SWEEP_SAMPLES}.")
+        angles.append(round(current, 10))
+        current += signed_step
+
+    if not angles or not math.isclose(angles[-1], end, abs_tol=ANGLE_TOLERANCE):
+        if len(angles) >= MAX_SWEEP_SAMPLES:
+            raise ValueError(f"Sweep exceeds maximum supported sample count of {MAX_SWEEP_SAMPLES}.")
+        angles.append(round(end, 10))
+
+    return angles
+
+
+def analyze_slider_crank_sweep(request: SliderCrankSweepRequest) -> SliderCrankSweepResponse:
+    """Run deterministic slider-crank analysis across a crank-angle sweep."""
+    notes = [
+        "Sweep samples are generated exclusively by the deterministic backend slider-crank position, velocity, and acceleration solver.",
+        "Each sample uses the same crank radius, connecting rod length, slider offset, angular velocity, and angular acceleration.",
+        f"Requested sweep range: {request.theta_start_deg}° to {request.theta_end_deg}° with step {request.theta_step_deg}°.",
+    ]
+
+    try:
+        angles = _build_sweep_angles(request.theta_start_deg, request.theta_end_deg, request.theta_step_deg)
+    except ValueError as exc:
+        notes.insert(0, str(exc))
+        return SliderCrankSweepResponse(mechanism="slider_crank", sample_count=0, valid_sample_count=0, invalid_sample_count=0, samples=[], notes=notes)
+
+    samples: list[SliderCrankSweepSample] = []
+    for theta_deg in angles:
+        analysis = analyze_slider_crank(SliderCrankAnalyzeRequest(crank_radius=request.crank_radius, connecting_rod_length=request.connecting_rod_length, theta_deg=theta_deg, omega=request.omega, alpha=request.alpha, offset=request.offset))
+        samples.append(SliderCrankSweepSample(theta_deg=analysis.theta_deg, valid=analysis.valid, slider_position=analysis.slider_position, transmission_angle_deg=analysis.transmission_angle_deg, joint_coordinates=analysis.joint_coordinates, velocity_analysis=analysis.velocity_analysis, acceleration_analysis=analysis.acceleration_analysis, notes=analysis.notes))
+
+    valid_sample_count = sum(1 for sample in samples if sample.valid)
+    return SliderCrankSweepResponse(mechanism="slider_crank", sample_count=len(samples), valid_sample_count=valid_sample_count, invalid_sample_count=len(samples)-valid_sample_count, samples=samples, notes=notes)

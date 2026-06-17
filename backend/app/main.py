@@ -10,9 +10,11 @@ from app.models import (
     FourBarSweepResponse,
     SliderCrankAnalyzeRequest,
     SliderCrankAnalyzeResponse,
+    SliderCrankSweepRequest,
+    SliderCrankSweepResponse,
 )
 from app.solvers.fourbar import analyze_four_bar, analyze_four_bar_sweep
-from app.solvers.slider_crank import analyze_slider_crank
+from app.solvers.slider_crank import analyze_slider_crank, analyze_slider_crank_sweep
 
 app = FastAPI(
     title="MechSynthCAD API",
@@ -43,6 +45,11 @@ def analyze_four_bar_sweep_endpoint(request: FourBarSweepRequest) -> FourBarSwee
 @app.post("/api/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse)
 def analyze_slider_crank_endpoint(request: SliderCrankAnalyzeRequest) -> SliderCrankAnalyzeResponse:
     return analyze_slider_crank(request)
+
+
+@app.post("/api/mechanisms/slider-crank/sweep", response_model=SliderCrankSweepResponse)
+def analyze_slider_crank_sweep_endpoint(request: SliderCrankSweepRequest) -> SliderCrankSweepResponse:
+    return analyze_slider_crank_sweep(request)
 
 
 @app.post("/api/agents/mechanism-workflow", response_model=AgentWorkflowResponse)
