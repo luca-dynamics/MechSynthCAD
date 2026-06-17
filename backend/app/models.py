@@ -2,9 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 Coordinate = tuple[float, float]
-
 
 class FourBarAnalyzeRequest(BaseModel):
     l1: float = Field(..., description="Ground link length")
@@ -15,13 +13,11 @@ class FourBarAnalyzeRequest(BaseModel):
     omega2: float = Field(..., description="Input angular velocity")
     alpha2: float = Field(..., description="Input angular acceleration")
 
-
 class JointCoordinates(BaseModel):
     A: Coordinate
     B: Coordinate
     C: Coordinate | None
     D: Coordinate
-
 
 class VelocityAnalysis(BaseModel):
     omega2: float
@@ -30,14 +26,12 @@ class VelocityAnalysis(BaseModel):
     velocity_B: Coordinate | None
     velocity_C: Coordinate | None
 
-
 class AccelerationAnalysis(BaseModel):
     alpha2: float
     alpha3: float | None
     alpha4: float | None
     acceleration_B: Coordinate | None
     acceleration_C: Coordinate | None
-
 
 class FourBarAnalyzeResponse(BaseModel):
     mechanism: Literal["four_bar_linkage"]
@@ -53,7 +47,6 @@ class FourBarAnalyzeResponse(BaseModel):
     acceleration_analysis: AccelerationAnalysis
     notes: list[str]
 
-
 class FourBarSweepRequest(BaseModel):
     l1: float = Field(..., description="Ground link length")
     l2: float = Field(..., description="Crank link length")
@@ -65,7 +58,6 @@ class FourBarSweepRequest(BaseModel):
     omega2: float = Field(..., description="Input angular velocity")
     alpha2: float = Field(..., description="Input angular acceleration")
 
-
 class FourBarSweepSample(BaseModel):
     theta2_deg: float
     valid: bool
@@ -76,7 +68,6 @@ class FourBarSweepSample(BaseModel):
     acceleration_analysis: AccelerationAnalysis
     notes: list[str]
 
-
 class FourBarSweepResponse(BaseModel):
     mechanism: Literal["four_bar_linkage"]
     sample_count: int
@@ -86,4 +77,43 @@ class FourBarSweepResponse(BaseModel):
     classification: str
     mobility: int
     samples: list[FourBarSweepSample]
+    notes: list[str]
+
+class SliderCrankAnalyzeRequest(BaseModel):
+    crank_radius: float = Field(..., description="Crank radius")
+    connecting_rod_length: float = Field(..., description="Connecting rod length")
+    theta_deg: float = Field(..., description="Input crank angle in degrees")
+    omega: float = Field(..., description="Input angular velocity")
+    alpha: float = Field(..., description="Input angular acceleration")
+    offset: float = Field(0.0, description="Vertical slider-line offset")
+
+class SliderCrankJointCoordinates(BaseModel):
+    O: Coordinate
+    A: Coordinate
+    B: Coordinate
+
+class SliderCrankVelocityAnalysis(BaseModel):
+    omega: float
+    velocity_A: Coordinate | None
+    velocity_B: Coordinate | None
+    slider_velocity: float | None
+
+class SliderCrankAccelerationAnalysis(BaseModel):
+    alpha: float
+    acceleration_A: Coordinate | None
+    acceleration_B: Coordinate | None
+    slider_acceleration: float | None
+
+class SliderCrankAnalyzeResponse(BaseModel):
+    mechanism: Literal["slider_crank"]
+    valid: bool
+    theta_deg: float
+    crank_radius: float
+    connecting_rod_length: float
+    offset: float
+    slider_position: float | None
+    transmission_angle_deg: float | None
+    joint_coordinates: SliderCrankJointCoordinates
+    velocity_analysis: SliderCrankVelocityAnalysis
+    acceleration_analysis: SliderCrankAccelerationAnalysis
     notes: list[str]

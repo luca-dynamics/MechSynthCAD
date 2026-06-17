@@ -89,3 +89,47 @@ export type SweepForm = {
   theta2_end_deg: number;
   theta2_step_deg: number;
 };
+
+export type SliderCrankForm = {
+  crank_radius: number;
+  connecting_rod_length: number;
+  theta_deg: number;
+  omega: number;
+  alpha: number;
+  offset: number;
+};
+
+export type SliderCrankJointCoordinates = {
+  O: Point;
+  A: Point;
+  B: Point;
+};
+
+export type SliderCrankVelocityAnalysis = {
+  omega: number;
+  velocity_A: Vector2 | null;
+  velocity_B: Vector2 | null;
+  slider_velocity: number | null;
+};
+
+export type SliderCrankAccelerationAnalysis = {
+  alpha: number;
+  acceleration_A: Vector2 | null;
+  acceleration_B: Vector2 | null;
+  slider_acceleration: number | null;
+};
+
+export type SliderCrankAnalysisResult = {
+  mechanism: "slider_crank";
+  valid: boolean;
+  theta_deg: number;
+  crank_radius: number;
+  connecting_rod_length: number;
+  offset: number;
+  slider_position: number | null;
+  transmission_angle_deg: number | null;
+  joint_coordinates: SliderCrankJointCoordinates;
+  velocity_analysis: SliderCrankVelocityAnalysis;
+  acceleration_analysis: SliderCrankAccelerationAnalysis;
+  notes: string[];
+};

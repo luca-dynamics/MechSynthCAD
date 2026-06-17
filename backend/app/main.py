@@ -1,9 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models import FourBarAnalyzeRequest, FourBarAnalyzeResponse, FourBarSweepRequest, FourBarSweepResponse
+from app.models import (
+    FourBarAnalyzeRequest,
+    FourBarAnalyzeResponse,
+    FourBarSweepRequest,
+    FourBarSweepResponse,
+    SliderCrankAnalyzeRequest,
+    SliderCrankAnalyzeResponse,
+)
 from app.solvers.fourbar import analyze_four_bar, analyze_four_bar_sweep
-
+from app.solvers.slider_crank import analyze_slider_crank
 
 app = FastAPI(
     title="MechSynthCAD API",
@@ -19,17 +26,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
-
 
 @app.post("/api/mechanisms/fourbar/analyze", response_model=FourBarAnalyzeResponse)
 def analyze_four_bar_endpoint(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     return analyze_four_bar(request)
 
-
 @app.post("/api/mechanisms/fourbar/sweep", response_model=FourBarSweepResponse)
 def analyze_four_bar_sweep_endpoint(request: FourBarSweepRequest) -> FourBarSweepResponse:
     return analyze_four_bar_sweep(request)
+
+@app.post("/api/mechanisms/slider-crank/analyze", response_model=SliderCrankAnalyzeResponse)
+def analyze_slider_crank_endpoint(request: SliderCrankAnalyzeRequest) -> SliderCrankAnalyzeResponse:
+    return analyze_slider_crank(request)

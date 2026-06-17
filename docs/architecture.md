@@ -4,15 +4,15 @@ MechSynthCAD is designed as a CAD-based engineering software tool for planar mec
 
 ## Frontend: React/Next.js
 
-The frontend is a Next.js TypeScript application styled with Tailwind CSS. It provides the engineering dashboard, four-bar linkage input form, CAD-style visualization area, and panels for deterministic results and future AI-generated explanations.
+The frontend is a Next.js TypeScript application styled with Tailwind CSS. It provides the engineering dashboard, mechanism selection, four-bar linkage and slider-crank input forms, CAD-style visualization areas, and panels for deterministic results and future AI-generated explanations.
 
 ## Backend: Python FastAPI
 
-The backend is a FastAPI service that exposes typed REST endpoints for mechanism analysis. The first API contract is `POST /api/mechanisms/fourbar/analyze`, which accepts four-bar geometry and input motion parameters and returns deterministic four-bar position data, including joint coordinates for A, B, C, and D when the configuration is valid. PR 6 extends this response with deterministic velocity and acceleration analysis that uses `ω2` and `α2` to compute `ω3`, `ω4`, `α3`, `α4`, and joint B/C linear velocity and acceleration. PR 5 adds `POST /api/mechanisms/fourbar/sweep`, and PR 6 extends each sweep sample so position, velocity, and acceleration data are preserved across the θ2 range.
+The backend is a FastAPI service that exposes typed REST endpoints for mechanism analysis. The first API contract is `POST /api/mechanisms/fourbar/analyze`, which accepts four-bar geometry and input motion parameters and returns deterministic four-bar position data, including joint coordinates for A, B, C, and D when the configuration is valid. PR 6 extends this response with deterministic velocity and acceleration analysis that uses `ω2` and `α2` to compute `ω3`, `ω4`, `α3`, `α4`, and joint B/C linear velocity and acceleration. PR 5 adds `POST /api/mechanisms/fourbar/sweep`, and PR 6 extends each sweep sample so position, velocity, and acceleration data are preserved across the θ2 range. PR 8 adds `POST /api/mechanisms/slider-crank/analyze` for the second supported planar mechanism; it returns slider-crank position, velocity, acceleration, transmission angle, joint coordinates, and notes from deterministic backend equations.
 
 ## Deterministic Mathematical Solver
 
-The deterministic kinematic engine owns the core engineering calculations. The current solver performs four-bar position analysis and returns reproducible angular and joint-coordinate outputs. PR 6 adds vector-loop velocity and acceleration equations in the backend solver: `ω2` produces joint B velocity and the solved `ω3`/`ω4` values, while `α2` and centripetal terms produce joint B/C acceleration and `α3`/`α4`. Singular or near-singular velocity/acceleration systems keep the position result valid but return null motion unknowns with explanatory notes. PR 5 adds deterministic sweep orchestration over input crank angles without duplicating position equations; every simulation sample now comes from the backend solver with position, velocity, and acceleration fields.
+The deterministic kinematic engine owns the core engineering calculations. The current solver performs four-bar position analysis and returns reproducible angular and joint-coordinate outputs. PR 6 adds vector-loop velocity and acceleration equations in the backend solver: `ω2` produces joint B velocity and the solved `ω3`/`ω4` values, while `α2` and centripetal terms produce joint B/C acceleration and `α3`/`α4`. Singular or near-singular velocity/acceleration systems keep the position result valid but return null motion unknowns with explanatory notes. PR 5 adds deterministic sweep orchestration over input crank angles without duplicating position equations; every simulation sample now comes from the backend solver with position, velocity, and acceleration fields. PR 8 adds a deterministic slider-crank solver using the crank-pin position, connecting-rod constraint, and differentiated slider-position equations; invalid or near-singular configurations preserve safe null values with explanatory notes instead of relying on AI or frontend calculations.
 
 ## AI-Assisted Explanation Layer
 
@@ -32,3 +32,8 @@ The graphing layer is a simple SVG line chart that plots θ3 and θ4 against θ2
 ## Why AI Does Not Perform Core Calculations
 
 Kinematic analysis requires repeatable, auditable calculations based on established mechanism theory. Keeping the core calculations in a deterministic solver ensures that results can be validated, tested, and documented for an academic Mechanical Engineering project. AI support is reserved for interpretation and communication rather than authoritative numerical computation.
+
+
+## PR 8 Slider-Crank Module
+
+PR 8 adds slider-crank support as the second planar mechanism while keeping all four-bar functionality unchanged. The backend performs deterministic position, velocity, and acceleration calculations for the crank center O, crank pin A, and slider point B, including optional slider-line offset. The frontend adds mechanism selection, a slider-crank input panel, CAD-style SVG visualization with a horizontal guide line and slider block, and a structured results panel with raw JSON for validation. AI integration and report generation remain out of scope for this PR.
