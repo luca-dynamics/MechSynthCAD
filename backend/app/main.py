@@ -35,6 +35,11 @@ app.add_middleware(
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
+
+@app.get("/api/health")
+def api_health() -> dict[str, str]:
+    return {"status": "ok", "service": "MechSynthCAD API"}
+
 @app.post("/api/mechanisms/fourbar/analyze", response_model=FourBarAnalyzeResponse)
 def analyze_four_bar_endpoint(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     return analyze_four_bar(request)
