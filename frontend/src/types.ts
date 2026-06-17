@@ -165,3 +165,29 @@ export type AgentWorkflowResponse = {
   report_ready_summary: string;
   safety_notes: string[];
 };
+
+
+export type ReportMechanismType = "four_bar" | "slider_crank";
+
+export type ReportRequest = {
+  title?: string | null;
+  mechanism_type: ReportMechanismType;
+  input_parameters: Record<string, unknown>;
+  solver_result?: Record<string, unknown> | null;
+  sweep_result?: Record<string, unknown> | null;
+  agent_workflow?: Record<string, unknown> | null;
+};
+
+export type ReportSection = {
+  heading: string;
+  content: string;
+  bullets: string[];
+};
+
+export type ReportResponse = {
+  title: string;
+  mechanism_type: ReportMechanismType;
+  sections: ReportSection[];
+  markdown: string;
+  validation_notes: string[];
+};

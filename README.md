@@ -79,3 +79,9 @@ PR 9 adds an agentic engineering workflow scaffold around the deterministic solv
 The workflow represents six engineering roles: Intent Agent, Parameter Validation Agent, Solver Tool Agent, Result Interpretation Agent, Design Recommendation Agent, and Report Drafting Agent. These roles are currently implemented with deterministic, rule-based logic. They can interpret a user goal, identify required and missing inputs, plan which solver endpoint should be used, interpret a provided solver result, suggest design iteration direction, and draft a short report-ready summary.
 
 The agent layer does **not** calculate kinematic values. Four-bar and slider-crank calculations remain owned by deterministic backend solvers. Real LLM integration can be added later behind this architecture, but PR 9 intentionally avoids external AI API calls, API keys, or unverified numerical generation.
+
+## PR 10 Engineering Report Preview
+
+PR 10 adds a structured engineering report preview workflow. The backend now exposes `POST /api/reports/mechanism`, which converts supplied mechanism inputs, deterministic solver outputs, optional four-bar sweep data, and optional agent workflow summaries into typed report sections and markdown preview text.
+
+The report generator is intentionally separate from solvers and agents. It does not run new kinematic calculations and does not invent engineering numbers: missing or null values are shown as `N/A`, and deterministic solver outputs remain the numerical source of truth. The frontend adds an Engineering Report Preview panel for both four-bar and slider-crank workflows. File export, PDF export, and markdown download are deferred to a later PR.

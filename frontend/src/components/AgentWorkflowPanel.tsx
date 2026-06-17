@@ -6,6 +6,7 @@ type AgentWorkflowPanelProps = {
   mechanismType: Exclude<AgentMechanismRequestType, "auto">;
   availableContext: Record<string, unknown>;
   solverResult: Record<string, unknown> | null;
+  onWorkflowComplete?: (workflow: AgentWorkflowResponse) => void;
 };
 
 function ListBlock({ title, items }: { title: string; items: string[] }) {
@@ -17,7 +18,7 @@ function ListBlock({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-export function AgentWorkflowPanel({ mechanismType, availableContext, solverResult }: AgentWorkflowPanelProps) {
+export function AgentWorkflowPanel({ mechanismType, availableContext, solverResult, onWorkflowComplete }: AgentWorkflowPanelProps) {
   const [userGoal, setUserGoal] = useState("Validate inputs, plan solver usage, and prepare engineering interpretation.");
   const [workflow, setWorkflow] = useState<AgentWorkflowResponse | null>(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -27,7 +28,9 @@ export function AgentWorkflowPanel({ mechanismType, availableContext, solverResu
     setIsRunning(true);
     setError(null);
     try {
-      setWorkflow(await runMechanismAgentWorkflow({ user_goal: userGoal, mechanism_type: mechanismType, available_context: availableContext, solver_result: solverResult }));
+      const completedWorkflow = await runMechanismAgentWorkflow({ user_goal: userGoal, mechanism_type: mechanismType, available_context: availableContext, solver_result: solverResult });
+      setWorkflow(completedWorkflow);
+      onWorkflowComplete?.(completedWorkflow);
     } catch (workflowError) {
       setError(workflowError instanceof Error ? workflowError.message : "Unable to run agent workflow");
       setWorkflow(null);

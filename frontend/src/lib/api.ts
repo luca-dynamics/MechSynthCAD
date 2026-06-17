@@ -1,4 +1,4 @@
-import type { AgentWorkflowRequest, AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepRequest, FourBarSweepResponse, SliderCrankAnalysisResult, SliderCrankForm } from "@/types";
+import type { AgentWorkflowRequest, AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepRequest, FourBarSweepResponse, ReportRequest, ReportResponse, SliderCrankAnalysisResult, SliderCrankForm } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -49,4 +49,17 @@ export async function runMechanismAgentWorkflow(payload: AgentWorkflowRequest): 
   if (!response.ok) throw new Error(`Backend returned ${response.status}`);
 
   return (await response.json()) as AgentWorkflowResponse;
+}
+
+
+export async function generateMechanismReport(payload: ReportRequest): Promise<ReportResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/reports/mechanism`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) throw new Error(`Backend returned ${response.status}`);
+
+  return (await response.json()) as ReportResponse;
 }
