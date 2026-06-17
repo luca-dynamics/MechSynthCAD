@@ -14,7 +14,7 @@ The AI layer is intentionally supportive only. Core engineering calculations wil
 - TypeScript
 - Tailwind CSS
 - FastAPI backend
-- Deterministic four-bar position analysis backend
+- Deterministic four-bar position analysis and simulation sweep backend
 - AI assistant layer planned for explanation, validation support, and report generation
 
 ## Repository Structure
@@ -53,7 +53,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs at <http://localhost:3000> and calls the backend endpoint at `http://localhost:8000/api/mechanisms/fourbar/analyze`.
+The frontend runs at <http://localhost:3000> and calls the backend endpoints at `http://localhost:8000/api/mechanisms/fourbar/analyze` and `http://localhost:8000/api/mechanisms/fourbar/sweep`.
 
 ## Development Roadmap
 
@@ -61,7 +61,7 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoint at `
 2. PR 2: Four-bar mathematical engine
 3. PR 3: FastAPI endpoint wired to the deterministic four-bar solver
 4. PR 4: Real frontend SVG CAD-style visualization from backend joint coordinates
-5. PR 5: Simulation and graphing
+5. PR 5: Deterministic four-bar simulation sweep, SVG animation controls, and θ3/θ4 graphing
 6. PR 6: Velocity and acceleration analysis
 7. PR 7: Slider-crank module
 8. PR 8: AI explanation module
@@ -69,4 +69,4 @@ The frontend runs at <http://localhost:3000> and calls the backend endpoint at `
 
 ## Current Scope
 
-The current scope includes deterministic four-bar position analysis exposed through FastAPI and a frontend SVG renderer that draws the linkage from backend `joint_coordinates`. PR 4 adds a standalone 2D computer-aided mechanism visualization layer for planar linkage analysis; it is not a full industrial CAD kernel. The project still does not include real AI API integration, animation, graphing, slider-crank analysis, or report generation.
+The current scope includes deterministic four-bar position analysis and deterministic four-bar simulation sweeps exposed through FastAPI. The frontend SVG renderer draws the linkage from backend `joint_coordinates`; PR 5 adds animation controls driven by backend sweep samples and lightweight graphs of θ3/θ4 against θ2. Velocity and acceleration analysis remain deferred to a later PR, and the project still does not include real AI API integration, slider-crank analysis, or report generation.

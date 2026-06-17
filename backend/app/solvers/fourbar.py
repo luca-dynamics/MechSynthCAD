@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import math
 
-from app.models import FourBarAnalyzeRequest, FourBarAnalyzeResponse, JointCoordinates
+from app.models import (
+    FourBarAnalyzeRequest,
+    FourBarAnalyzeResponse,
+    FourBarSweepRequest,
+    FourBarSweepResponse,
+    FourBarSweepSample,
+    JointCoordinates,
+)
 
 TOLERANCE = 1e-9
 ANGLE_TOLERANCE = 1e-7
@@ -39,7 +46,7 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     lengths = [request.l1, request.l2, request.l3, request.l4]
     mobility = four_bar_mobility()
     notes = [
-        "Velocity and acceleration inputs are accepted for the API contract, but velocity and acceleration analysis will be implemented in PR 5."
+        "Velocity and acceleration inputs are accepted for the API contract, but velocity and acceleration analysis will be implemented in a later PR."
     ]
 
     theta2_rad = math.radians(request.theta2_deg)
@@ -146,5 +153,96 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             C=_round_coordinate(c),
             D=d,
         ),
+        notes=notes,
+    )
+
+
+MAX_SWEEP_SAMPLES = 721
+
+
+def _build_sweep_angles(start: float, end: float, step: float) -> list[float]:
+    if math.isclose(step, 0.0, abs_tol=TOLERANCE):
+        raise ValueError("theta2_step_deg must be nonzero.")
+
+    direction = 1 if end >= start else -1
+    signed_step = abs(step) * direction
+    angles: list[float] = []
+    current = start
+
+    while (current <= end + ANGLE_TOLERANCE) if direction > 0 else (current >= end - ANGLE_TOLERANCE):
+        if len(angles) >= MAX_SWEEP_SAMPLES:
+            raise ValueError(f"Sweep exceeds maximum supported sample count of {MAX_SWEEP_SAMPLES}.")
+        angles.append(round(current, 10))
+        current += signed_step
+
+    if not math.isclose(angles[-1], end, abs_tol=ANGLE_TOLERANCE):
+        if len(angles) >= MAX_SWEEP_SAMPLES:
+            raise ValueError(f"Sweep exceeds maximum supported sample count of {MAX_SWEEP_SAMPLES}.")
+        angles.append(round(end, 10))
+
+    return angles
+
+
+def analyze_four_bar_sweep(request: FourBarSweepRequest) -> FourBarSweepResponse:
+    """Run deterministic position analysis across a range of input crank angles."""
+    notes = [
+        "Sweep samples are generated exclusively by the deterministic four-bar position solver.",
+        "Velocity and acceleration analysis remains deferred to a later PR.",
+    ]
+    mobility = four_bar_mobility()
+    lengths = [request.l1, request.l2, request.l3, request.l4]
+    grashof_status = "invalid" if any(length <= 0 for length in lengths) else classify_grashof(lengths)
+
+    try:
+        angles = _build_sweep_angles(request.theta2_start_deg, request.theta2_end_deg, request.theta2_step_deg)
+    except ValueError as exc:
+        notes.insert(0, str(exc))
+        return FourBarSweepResponse(
+            mechanism="four_bar_linkage",
+            sample_count=0,
+            valid_sample_count=0,
+            invalid_sample_count=0,
+            grashof_status=grashof_status,
+            classification="invalid",
+            mobility=mobility,
+            samples=[],
+            notes=notes,
+        )
+
+    samples: list[FourBarSweepSample] = []
+    for theta2_deg in angles:
+        analysis = analyze_four_bar(
+            FourBarAnalyzeRequest(
+                l1=request.l1,
+                l2=request.l2,
+                l3=request.l3,
+                l4=request.l4,
+                theta2_deg=theta2_deg,
+                omega2=request.omega2,
+                alpha2=request.alpha2,
+            )
+        )
+        samples.append(
+            FourBarSweepSample(
+                theta2_deg=analysis.theta2_deg,
+                valid=analysis.valid,
+                theta3_deg=analysis.theta3_deg,
+                theta4_deg=analysis.theta4_deg,
+                joint_coordinates=analysis.joint_coordinates,
+                notes=analysis.notes,
+            )
+        )
+
+    valid_sample_count = sum(1 for sample in samples if sample.valid)
+    invalid_sample_count = len(samples) - valid_sample_count
+    return FourBarSweepResponse(
+        mechanism="four_bar_linkage",
+        sample_count=len(samples),
+        valid_sample_count=valid_sample_count,
+        invalid_sample_count=invalid_sample_count,
+        grashof_status=grashof_status,
+        classification=grashof_status,
+        mobility=mobility,
+        samples=samples,
         notes=notes,
     )
