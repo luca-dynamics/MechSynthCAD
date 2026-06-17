@@ -1,0 +1,1 @@
+"""MechSynthCAD FastAPI backend package."""
