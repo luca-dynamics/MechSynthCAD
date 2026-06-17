@@ -4,15 +4,40 @@ import math
 
 from app.models import (
     FourBarAnalyzeRequest,
+    AccelerationAnalysis,
     FourBarAnalyzeResponse,
     FourBarSweepRequest,
     FourBarSweepResponse,
     FourBarSweepSample,
     JointCoordinates,
+    VelocityAnalysis,
 )
 
 TOLERANCE = 1e-9
 ANGLE_TOLERANCE = 1e-7
+SYSTEM_DETERMINANT_TOLERANCE = 1e-8
+
+
+def _empty_velocity_analysis(omega2: float) -> VelocityAnalysis:
+    return VelocityAnalysis(omega2=omega2, omega3=None, omega4=None, velocity_B=None, velocity_C=None)
+
+
+def _empty_acceleration_analysis(alpha2: float) -> AccelerationAnalysis:
+    return AccelerationAnalysis(alpha2=alpha2, alpha3=None, alpha4=None, acceleration_B=None, acceleration_C=None)
+
+
+def _cross_scalar_vector(angular_value: float, vector: tuple[float, float]) -> tuple[float, float]:
+    return (-angular_value * vector[1], angular_value * vector[0])
+
+
+def _solve_2x2(
+    a11: float, a12: float, a21: float, a22: float, b1: float, b2: float
+) -> tuple[float, float] | None:
+    determinant = a11 * a22 - a12 * a21
+    scale = max(abs(a11), abs(a12), abs(a21), abs(a22), 1.0)
+    if abs(determinant) <= SYSTEM_DETERMINANT_TOLERANCE * scale * scale:
+        return None
+    return ((b1 * a22 - a12 * b2) / determinant, (a11 * b2 - b1 * a21) / determinant)
 
 
 def classify_grashof(lengths: list[float], tolerance: float = TOLERANCE) -> str:
@@ -46,7 +71,7 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     lengths = [request.l1, request.l2, request.l3, request.l4]
     mobility = four_bar_mobility()
     notes = [
-        "Velocity and acceleration inputs are accepted for the API contract, but velocity and acceleration analysis will be implemented in a later PR."
+        "Position, velocity, and acceleration are computed by deterministic backend kinematic equations."
     ]
 
     theta2_rad = math.radians(request.theta2_deg)
@@ -69,6 +94,8 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             theta3_deg=None,
             theta4_deg=None,
             joint_coordinates=JointCoordinates(A=a, B=_round_coordinate(b), C=None, D=d),
+            velocity_analysis=_empty_velocity_analysis(request.omega2),
+            acceleration_analysis=_empty_acceleration_analysis(request.alpha2),
             notes=notes,
         )
 
@@ -89,6 +116,8 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             theta3_deg=None,
             theta4_deg=None,
             joint_coordinates=JointCoordinates(A=a, B=_round_coordinate(b), C=None, D=d),
+            velocity_analysis=_empty_velocity_analysis(request.omega2),
+            acceleration_analysis=_empty_acceleration_analysis(request.alpha2),
             notes=notes,
         )
 
@@ -104,6 +133,8 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             theta3_deg=None,
             theta4_deg=None,
             joint_coordinates=JointCoordinates(A=a, B=_round_coordinate(b), C=None, D=d),
+            velocity_analysis=_empty_velocity_analysis(request.omega2),
+            acceleration_analysis=_empty_acceleration_analysis(request.alpha2),
             notes=notes,
         )
 
@@ -119,6 +150,8 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             theta3_deg=None,
             theta4_deg=None,
             joint_coordinates=JointCoordinates(A=a, B=_round_coordinate(b), C=None, D=d),
+            velocity_analysis=_empty_velocity_analysis(request.omega2),
+            acceleration_analysis=_empty_acceleration_analysis(request.alpha2),
             notes=notes,
         )
 
@@ -138,6 +171,55 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
     theta3_deg = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]))
     theta4_deg = math.degrees(math.atan2(c[1] - d[1], c[0] - d[0]))
 
+    r_ab = (b[0] - a[0], b[1] - a[1])
+    r_bc = (c[0] - b[0], c[1] - b[1])
+    r_dc = (c[0] - d[0], c[1] - d[1])
+    velocity_b = _cross_scalar_vector(request.omega2, r_ab)
+
+    a11, a21 = -r_bc[1], r_bc[0]
+    a12, a22 = r_dc[1], -r_dc[0]
+    velocity_solution = _solve_2x2(a11, a12, a21, a22, -velocity_b[0], -velocity_b[1])
+    velocity_analysis = _empty_velocity_analysis(request.omega2)
+    acceleration_analysis = _empty_acceleration_analysis(request.alpha2)
+
+    if velocity_solution is None:
+        notes.append("Velocity/acceleration analysis unavailable: the angular velocity linear system is singular or near singular at this configuration.")
+    else:
+        omega3, omega4 = velocity_solution
+        velocity_c = (velocity_b[0] - omega3 * r_bc[1], velocity_b[1] + omega3 * r_bc[0])
+        velocity_analysis = VelocityAnalysis(
+            omega2=request.omega2,
+            omega3=round(omega3, 10),
+            omega4=round(omega4, 10),
+            velocity_B=_round_coordinate(velocity_b),
+            velocity_C=_round_coordinate(velocity_c),
+        )
+
+        acceleration_b = (
+            -request.alpha2 * r_ab[1] - request.omega2**2 * r_ab[0],
+            request.alpha2 * r_ab[0] - request.omega2**2 * r_ab[1],
+        )
+        rhs = (
+            -acceleration_b[0] + omega3**2 * r_bc[0] - omega4**2 * r_dc[0],
+            -acceleration_b[1] + omega3**2 * r_bc[1] - omega4**2 * r_dc[1],
+        )
+        acceleration_solution = _solve_2x2(a11, a12, a21, a22, rhs[0], rhs[1])
+        if acceleration_solution is None:
+            notes.append("Acceleration analysis unavailable: the angular acceleration linear system is singular or near singular at this configuration.")
+        else:
+            alpha3, alpha4 = acceleration_solution
+            acceleration_c = (
+                acceleration_b[0] - alpha3 * r_bc[1] - omega3**2 * r_bc[0],
+                acceleration_b[1] + alpha3 * r_bc[0] - omega3**2 * r_bc[1],
+            )
+            acceleration_analysis = AccelerationAnalysis(
+                alpha2=request.alpha2,
+                alpha3=round(alpha3, 10),
+                alpha4=round(alpha4, 10),
+                acceleration_B=_round_coordinate(acceleration_b),
+                acceleration_C=_round_coordinate(acceleration_c),
+            )
+
     return FourBarAnalyzeResponse(
         mechanism="four_bar_linkage",
         valid=True,
@@ -153,6 +235,8 @@ def analyze_four_bar(request: FourBarAnalyzeRequest) -> FourBarAnalyzeResponse:
             C=_round_coordinate(c),
             D=d,
         ),
+        velocity_analysis=velocity_analysis,
+        acceleration_analysis=acceleration_analysis,
         notes=notes,
     )
 
@@ -186,8 +270,8 @@ def _build_sweep_angles(start: float, end: float, step: float) -> list[float]:
 def analyze_four_bar_sweep(request: FourBarSweepRequest) -> FourBarSweepResponse:
     """Run deterministic position analysis across a range of input crank angles."""
     notes = [
-        "Sweep samples are generated exclusively by the deterministic four-bar position solver.",
-        "Velocity and acceleration analysis remains deferred to a later PR.",
+        "Sweep samples are generated exclusively by the deterministic four-bar position, velocity, and acceleration solver.",
+        "Each sample uses the same input angular velocity ω2 and angular acceleration α2.",
     ]
     mobility = four_bar_mobility()
     lengths = [request.l1, request.l2, request.l3, request.l4]
@@ -229,6 +313,8 @@ def analyze_four_bar_sweep(request: FourBarSweepRequest) -> FourBarSweepResponse
                 theta3_deg=analysis.theta3_deg,
                 theta4_deg=analysis.theta4_deg,
                 joint_coordinates=analysis.joint_coordinates,
+                velocity_analysis=analysis.velocity_analysis,
+                acceleration_analysis=analysis.acceleration_analysis,
                 notes=analysis.notes,
             )
         )

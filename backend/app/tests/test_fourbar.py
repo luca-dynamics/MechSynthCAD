@@ -1,3 +1,5 @@
+import math
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -37,6 +39,44 @@ def test_valid_four_bar_geometry_returns_c_coordinate():
     assert response.theta4_deg is not None
 
 
+def test_valid_analysis_returns_velocity_terms():
+    response = analyze_four_bar(FourBarAnalyzeRequest(**valid_payload()))
+
+    assert response.velocity_analysis.omega3 is not None
+    assert response.velocity_analysis.omega4 is not None
+    assert response.velocity_analysis.velocity_B is not None
+    assert response.velocity_analysis.velocity_C is not None
+    assert math.isclose(response.velocity_analysis.velocity_B[0], -175.0, abs_tol=1e-7)
+    assert math.isclose(response.velocity_analysis.velocity_B[1], 303.1088913246, abs_tol=1e-7)
+
+
+def test_valid_analysis_returns_acceleration_terms():
+    response = analyze_four_bar(FourBarAnalyzeRequest(**valid_payload()))
+
+    assert response.acceleration_analysis.alpha3 is not None
+    assert response.acceleration_analysis.alpha4 is not None
+    assert response.acceleration_analysis.acceleration_B is not None
+    assert response.acceleration_analysis.acceleration_C is not None
+    assert math.isclose(response.acceleration_analysis.acceleration_B[0], -3031.0889132455, abs_tol=1e-7)
+    assert math.isclose(response.acceleration_analysis.acceleration_B[1], -1750.0, abs_tol=1e-7)
+
+
+def test_invalid_geometry_returns_null_velocity_and_acceleration_outputs():
+    payload = valid_payload()
+    payload.update({"l1": 300, "l2": 10, "l3": 20, "l4": 30})
+
+    response = analyze_four_bar(FourBarAnalyzeRequest(**payload))
+
+    assert response.velocity_analysis.omega3 is None
+    assert response.velocity_analysis.omega4 is None
+    assert response.velocity_analysis.velocity_B is None
+    assert response.velocity_analysis.velocity_C is None
+    assert response.acceleration_analysis.alpha3 is None
+    assert response.acceleration_analysis.alpha4 is None
+    assert response.acceleration_analysis.acceleration_B is None
+    assert response.acceleration_analysis.acceleration_C is None
+
+
 def test_invalid_impossible_geometry_returns_failed_analysis_with_notes():
     payload = valid_payload()
     payload.update({"l1": 300, "l2": 10, "l3": 20, "l4": 30})
@@ -67,6 +107,8 @@ def test_analyze_endpoint():
     assert data["mechanism"] == "four_bar_linkage"
     assert data["valid"] is True
     assert data["joint_coordinates"]["C"] is not None
+    assert data["velocity_analysis"]["omega3"] is not None
+    assert data["acceleration_analysis"]["alpha3"] is not None
 
 
 def sweep_payload() -> dict[str, float]:
@@ -89,7 +131,8 @@ def test_sweep_returns_multiple_samples_and_counts_match():
     assert response.sample_count == 4
     assert len(response.samples) == 4
     assert response.valid_sample_count + response.invalid_sample_count == response.sample_count
-    assert any("Velocity and acceleration" in note for note in response.notes)
+    assert all(sample.velocity_analysis is not None for sample in response.samples)
+    assert all(sample.acceleration_analysis is not None for sample in response.samples)
 
 
 def test_decreasing_sweep_range_works():
@@ -141,3 +184,5 @@ def test_sweep_endpoint():
     assert data["mechanism"] == "four_bar_linkage"
     assert data["sample_count"] == 4
     assert data["valid_sample_count"] + data["invalid_sample_count"] == data["sample_count"]
+    assert "velocity_analysis" in data["samples"][0]
+    assert "acceleration_analysis" in data["samples"][0]

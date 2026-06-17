@@ -1,10 +1,27 @@
-export type Point = [number, number];
+export type Vector2 = [number, number];
+export type Point = Vector2;
 
 export type JointCoordinates = {
   A: Point;
   B: Point;
   C: Point | null;
   D: Point;
+};
+
+export type VelocityAnalysis = {
+  omega2: number;
+  omega3: number | null;
+  omega4: number | null;
+  velocity_B: Vector2 | null;
+  velocity_C: Vector2 | null;
+};
+
+export type AccelerationAnalysis = {
+  alpha2: number;
+  alpha3: number | null;
+  alpha4: number | null;
+  acceleration_B: Vector2 | null;
+  acceleration_C: Vector2 | null;
 };
 
 export type FourBarAnalysisResult = {
@@ -17,6 +34,8 @@ export type FourBarAnalysisResult = {
   theta3_deg: number | null;
   theta4_deg: number | null;
   joint_coordinates: JointCoordinates;
+  velocity_analysis: VelocityAnalysis;
+  acceleration_analysis: AccelerationAnalysis;
   notes: string[];
 };
 
@@ -38,6 +57,8 @@ export type FourBarSweepSample = {
   theta3_deg: number | null;
   theta4_deg: number | null;
   joint_coordinates: JointCoordinates;
+  velocity_analysis: VelocityAnalysis;
+  acceleration_analysis: AccelerationAnalysis;
   notes: string[];
 };
 
