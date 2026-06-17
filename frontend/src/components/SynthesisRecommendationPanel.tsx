@@ -8,6 +8,7 @@ type Props = {
   solverResult: Record<string, unknown> | null;
   sweepResult: Record<string, unknown> | null;
   onRecommendationsGenerated?: (response: SynthesisResponse) => void;
+  onRecommendationsCleared?: () => void;
 };
 
 const metricsByMechanism: Record<MechanismType, string[]> = {
@@ -17,7 +18,7 @@ const metricsByMechanism: Record<MechanismType, string[]> = {
 
 const directions: SynthesisTargetDirection[] = ["increase", "decrease", "match", "minimize", "maximize"];
 
-export function SynthesisRecommendationPanel({ selectedMechanism, inputParameters, solverResult, sweepResult, onRecommendationsGenerated }: Props) {
+export function SynthesisRecommendationPanel({ selectedMechanism, inputParameters, solverResult, sweepResult, onRecommendationsGenerated, onRecommendationsCleared }: Props) {
   const metrics = useMemo(() => metricsByMechanism[selectedMechanism], [selectedMechanism]);
   const [metric, setMetric] = useState(metrics[0]);
   const [direction, setDirection] = useState<SynthesisTargetDirection>("increase");
@@ -27,11 +28,19 @@ export function SynthesisRecommendationPanel({ selectedMechanism, inputParameter
   const [response, setResponse] = useState<SynthesisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const synthesisInputSignature = useMemo(
+    () => JSON.stringify({ selectedMechanism, inputParameters, solverResult, sweepResult }),
+    [selectedMechanism, inputParameters, solverResult, sweepResult],
+  );
 
   useEffect(() => {
     setMetric(metrics[0]);
-    setResponse(null);
   }, [metrics]);
+
+  useEffect(() => {
+    setResponse(null);
+    onRecommendationsCleared?.();
+  }, [synthesisInputSignature, onRecommendationsCleared]);
 
   async function generateRecommendations() {
     setIsLoading(true);

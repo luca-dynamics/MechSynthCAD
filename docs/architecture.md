@@ -92,3 +92,11 @@ The synthesis layer does not solve new kinematics, infer hidden values, or inven
 Recommendations are deterministic parameter-adjustment directions, not black-box AI synthesis. Four-bar guidance focuses on reviewing link proportions and assembly feasibility; slider-crank guidance focuses on reviewing crank radius, connecting rod length, offset, input motion, and geometry relationships. Every recommendation keeps the solver as the numerical source of truth and requires a deterministic rerun before accepting any design change.
 
 The frontend exposes this as a non-chat target-goal panel labeled “Design Iteration / Synthesis Assistant.” Generated synthesis responses can be passed into the existing report preview, which adds a “Synthesis / Design Iteration Recommendations” section without changing solver math or introducing AI numerical calculation.
+
+## PR 15 Validation and Demo-Readiness Layer
+
+PR 15 adds frontend presentation and QA safeguards without changing solver mathematics. A deterministic truth banner near the top of the app states that numerical kinematic values come from deterministic solver endpoints. Agentic workflow, synthesis recommendations, interpretation, and reporting remain assistive layers and do not create final engineering values.
+
+A validation/capability matrix lists each demo capability, its readiness status, the numerical source of truth, and the verification requirement. This makes four-bar analysis, slider-crank analysis, sweeps, CAD SVG visualization, velocity/acceleration outputs, workflow support, synthesis recommendations, report preview, Markdown export, and browser print / Save-as-PDF readiness visible in the UI without claiming production certification.
+
+The frontend also clears stale workflow, synthesis, and report preview state when selected mechanisms or core report inputs change. This preserves the current solver results where practical while preventing old interpretation/report context from appearing attached to a new mechanism or changed input set.
