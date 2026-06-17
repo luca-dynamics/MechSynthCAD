@@ -133,3 +133,35 @@ export type SliderCrankAnalysisResult = {
   acceleration_analysis: SliderCrankAccelerationAnalysis;
   notes: string[];
 };
+
+export type AgentMechanismRequestType = "four_bar" | "slider_crank" | "auto";
+export type AgentSelectedMechanismType = "four_bar" | "slider_crank" | "unknown";
+
+export type AgentWorkflowRequest = {
+  user_goal: string;
+  mechanism_type: AgentMechanismRequestType;
+  available_context?: Record<string, unknown> | null;
+  solver_result?: Record<string, unknown> | null;
+};
+
+export type AgentWorkflowStep = {
+  step_id: string;
+  agent_role: string;
+  action: string;
+  status: "pending" | "completed" | "blocked";
+  summary: string;
+};
+
+export type AgentWorkflowResponse = {
+  workflow_id: string;
+  interpreted_goal: string;
+  selected_mechanism: AgentSelectedMechanismType;
+  required_inputs: string[];
+  missing_inputs: string[];
+  validation_notes: string[];
+  solver_tool_plan: string[];
+  workflow_steps: AgentWorkflowStep[];
+  design_recommendations: string[];
+  report_ready_summary: string;
+  safety_notes: string[];
+};

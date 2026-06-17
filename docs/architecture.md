@@ -37,3 +37,20 @@ Kinematic analysis requires repeatable, auditable calculations based on establis
 ## PR 8 Slider-Crank Module
 
 PR 8 adds slider-crank support as the second planar mechanism while keeping all four-bar functionality unchanged. The backend performs deterministic position, velocity, and acceleration calculations for the crank center O, crank pin A, and slider point B, including optional slider-line offset. The frontend adds mechanism selection, a slider-crank input panel, CAD-style SVG visualization with a horizontal guide line and slider block, and a structured results panel with raw JSON for validation. AI integration and report generation remain out of scope for this PR.
+
+## PR 9 Agentic Engineering Workflow Layer
+
+PR 9 introduces a dedicated backend agent package at `backend/app/agents/` and a frontend `AgentWorkflowPanel` that sits around, not in place of, the solver UI. The panel is visible for both four-bar and slider-crank workflows and receives the selected mechanism context plus any deterministic solver result that already exists.
+
+The workflow is intentionally agentic rather than a simple copilot explainer. It models a coordinated engineering process with the following roles:
+
+- Intent Agent: interprets the design or analysis goal.
+- Parameter Validation Agent: checks whether required solver dimensions and motion inputs are present.
+- Solver Tool Agent: selects deterministic solver endpoints from the tool registry.
+- Result Interpretation Agent: interprets provided solver output metadata and notes.
+- Design Recommendation Agent: suggests design iteration direction based on solver validity and notes.
+- Report Drafting Agent: prepares concise report-ready engineering text.
+
+The deterministic tool registry names the available calculation tools: `four_bar_analyze`, `four_bar_sweep`, and `slider_crank_analyze`. Each registry entry points to its API endpoint and states that calculations are owned by deterministic solvers. The orchestrator can validate and plan even before a solver result exists; once a solver result is supplied, it interprets only the fields returned by the solver and does not invent missing numerical values.
+
+This architecture preserves the project boundary that AI may assist with validation, planning, interpretation, recommendation, and report drafting, while deterministic solvers remain the source of numerical truth. A real LLM can be integrated later behind the same workflow contracts, but PR 9 uses deterministic rule-based behavior and makes no external AI API calls.
