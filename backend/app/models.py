@@ -117,3 +117,32 @@ class SliderCrankAnalyzeResponse(BaseModel):
     velocity_analysis: SliderCrankVelocityAnalysis
     acceleration_analysis: SliderCrankAccelerationAnalysis
     notes: list[str]
+
+
+class SliderCrankSweepRequest(BaseModel):
+    crank_radius: float = Field(..., description="Crank radius")
+    connecting_rod_length: float = Field(..., description="Connecting rod length")
+    theta_start_deg: float = Field(..., description="Starting input crank angle in degrees")
+    theta_end_deg: float = Field(..., description="Ending input crank angle in degrees")
+    theta_step_deg: float = Field(..., description="Input crank angle step in degrees")
+    omega: float = Field(..., description="Input angular velocity")
+    alpha: float = Field(..., description="Input angular acceleration")
+    offset: float = Field(0.0, description="Vertical slider-line offset")
+
+class SliderCrankSweepSample(BaseModel):
+    theta_deg: float
+    valid: bool
+    slider_position: float | None
+    transmission_angle_deg: float | None
+    joint_coordinates: SliderCrankJointCoordinates
+    velocity_analysis: SliderCrankVelocityAnalysis
+    acceleration_analysis: SliderCrankAccelerationAnalysis
+    notes: list[str]
+
+class SliderCrankSweepResponse(BaseModel):
+    mechanism: Literal["slider_crank"]
+    sample_count: int
+    valid_sample_count: int
+    invalid_sample_count: int
+    samples: list[SliderCrankSweepSample]
+    notes: list[str]

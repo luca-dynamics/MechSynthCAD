@@ -94,3 +94,7 @@ The report generator is intentionally separate from solvers and agents. It does 
 PR 12 adds a frontend-only print workflow for generated engineering reports. After a report preview exists, the frontend exposes a **Print / Save as PDF** action that calls the browser native print dialog; users can select **Save as PDF** from that dialog. The app does not add backend PDF generation, server-side file generation, or heavy PDF libraries.
 
 The print output is based on the existing generated report preview and deterministic solver outputs. It does not regenerate reports, recalculate mechanisms, or invent engineering values. Browser-side Markdown export from PR 11 remains available and still downloads the existing `report.markdown` content as a `.md` file.
+
+### PR 13: Slider-crank sweep, animation, and graphing
+
+PR 13 adds deterministic slider-crank sweep simulation. The backend sweep endpoint reuses the existing single-angle slider-crank solver for every sample, so position, velocity, and acceleration values remain deterministic and no AI calculations are introduced. The frontend now provides slider-crank sweep controls, SVG animation playback, and a lightweight slider-position graph. Slider-crank report previews can include supplied sweep summaries with sample, valid-sample, and invalid-sample counts.

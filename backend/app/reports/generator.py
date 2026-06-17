@@ -90,7 +90,7 @@ def generate_mechanism_report(request: ReportRequest) -> ReportResponse:
 
     if request.sweep_result is not None:
         sweep = request.sweep_result
-        sections.append(_section("Sweep / Simulation Summary", "Sweep or simulation data was supplied for report context.", [_bullet(field, _value(sweep, field)) for field in ["sample_count", "valid_sample_count", "invalid_sample_count", "grashof_status", "classification"]]))
+        sections.append(_section("Sweep / Simulation Summary", "Sweep or simulation data was supplied for report context.", [_bullet(field, _value(sweep, field)) for field in (["sample_count", "valid_sample_count", "invalid_sample_count", "grashof_status", "classification"] if request.mechanism_type == "four_bar" else ["sample_count", "valid_sample_count", "invalid_sample_count"])]))
     if request.agent_workflow is not None:
         sections.append(_section("Agentic Engineering Workflow Summary", "Agent workflow summary supplied for engineering interpretation; numerical values still originate from deterministic solvers.", _workflow_bullets(request.agent_workflow)))
 
