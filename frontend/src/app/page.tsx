@@ -4,13 +4,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AgentWorkflowPanel } from "@/components/AgentWorkflowPanel";
 import { CadWorkspace } from "@/components/CadWorkspace";
 import { MechanismInputPanel } from "@/components/MechanismInputPanel";
+import { ReportPreviewPanel } from "@/components/ReportPreviewPanel";
 import { ResultsPanel } from "@/components/ResultsPanel";
 import { SimulationControls } from "@/components/SimulationControls";
 import { SliderCrankInputPanel } from "@/components/SliderCrankInputPanel";
 import { SliderCrankResultsPanel } from "@/components/SliderCrankResultsPanel";
 import { SliderCrankSvg } from "@/components/SliderCrankSvg";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar } from "@/lib/api";
-import type { FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, SliderCrankAnalysisResult, SliderCrankForm, SweepForm } from "@/types";
+import type { AgentWorkflowResponse, FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, SliderCrankAnalysisResult, SliderCrankForm, SweepForm } from "@/types";
 
 const initialForm: FourBarForm = { l1: 120, l2: 35, l3: 90, l4: 80, theta2_deg: 30, omega2: 10, alpha2: 0 };
 const initialSweep: SweepForm = { theta2_start_deg: 0, theta2_end_deg: 360, theta2_step_deg: 10 };
@@ -33,6 +34,7 @@ export default function Home() {
   const [sliderCrankResult, setSliderCrankResult] = useState<SliderCrankAnalysisResult | null>(null);
   const [isSliderCrankLoading, setIsSliderCrankLoading] = useState(false);
   const [sliderCrankError, setSliderCrankError] = useState<string | null>(null);
+  const [latestWorkflow, setLatestWorkflow] = useState<AgentWorkflowResponse | null>(null);
 
   const selectedSample = sweepResult?.samples[selectedSampleIndex] ?? null;
   const displayResult = useMemo<FourBarAnalysisResult | null>(() => {
@@ -106,7 +108,7 @@ export default function Home() {
         {selectedMechanism === "four_bar" ? <ResultsPanel error={error} displayResult={displayResult} result={result} sweepResult={sweepResult} /> : <SliderCrankResultsPanel error={sliderCrankError} result={sliderCrankResult} />}
       </section>
       <section className="px-6 pb-8">
-        <AgentWorkflowPanel mechanismType={selectedMechanism} availableContext={agentAvailableContext} solverResult={agentSolverResult as Record<string, unknown> | null} />
+        <div className="space-y-6"><AgentWorkflowPanel mechanismType={selectedMechanism} availableContext={agentAvailableContext} solverResult={agentSolverResult as Record<string, unknown> | null} onWorkflowComplete={setLatestWorkflow} /><ReportPreviewPanel mechanismType={selectedMechanism} inputParameters={selectedMechanism === "four_bar" ? form : sliderCrankForm} solverResult={(selectedMechanism === "four_bar" ? displayResult || result : sliderCrankResult) as Record<string, unknown> | null} sweepResult={selectedMechanism === "four_bar" ? (sweepResult as Record<string, unknown> | null) : null} agentWorkflow={latestWorkflow as Record<string, unknown> | null} /></div>
       </section>
     </main>
   );

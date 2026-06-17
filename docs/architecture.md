@@ -54,3 +54,11 @@ The workflow is intentionally agentic rather than a simple copilot explainer. It
 The deterministic tool registry names the available calculation tools: `four_bar_analyze`, `four_bar_sweep`, and `slider_crank_analyze`. Each registry entry points to its API endpoint and states that calculations are owned by deterministic solvers. The orchestrator can validate and plan even before a solver result exists; once a solver result is supplied, it interprets only the fields returned by the solver and does not invent missing numerical values.
 
 This architecture preserves the project boundary that AI may assist with validation, planning, interpretation, recommendation, and report drafting, while deterministic solvers remain the source of numerical truth. A real LLM can be integrated later behind the same workflow contracts, but PR 9 uses deterministic rule-based behavior and makes no external AI API calls.
+
+## PR 10 Engineering Report Preview
+
+PR 10 adds a dedicated report package at `backend/app/reports/` with typed schemas and a deterministic report generator. The package is separate from both `backend/app/solvers/` and `backend/app/agents/`, preserving a clear boundary between calculation, workflow interpretation, and report rendering.
+
+The report endpoint, `POST /api/reports/mechanism`, accepts the selected mechanism type, input parameters, optional deterministic solver result, optional sweep result, and optional agent workflow summary. It returns structured report sections plus a markdown preview generated from the same section data. Report content can reference only supplied inputs, deterministic solver outputs, and supplied workflow summaries. Missing numerical values are rendered as `N/A`; the generator does not synthesize or infer unprovided engineering numbers.
+
+The frontend adds a reusable `ReportPreviewPanel` visible for both four-bar and slider-crank workflows. It renders report title, validation notes, structured sections, and a clearly separated markdown preview. The panel explicitly communicates that numerical values originate from solver outputs and that there is no file export yet. PDF export, markdown download, and other file-generation workflows are deferred to later work.
