@@ -136,15 +136,15 @@ body {
 }
 
 .v2-dark {
-  --v2-shell: #0d0c0b;
-  --v2-topbar: rgba(16, 15, 14, 0.88);
-  --v2-surface: rgba(27, 25, 23, 0.92);
-  --v2-surface-soft: rgba(35, 32, 29, 0.86);
-  --v2-control: rgba(255, 255, 255, 0.035);
+  --v2-shell: #080807;
+  --v2-topbar: rgba(8, 8, 7, 0.92);
+  --v2-surface: rgba(13, 12, 11, 0.96);
+  --v2-surface-soft: rgba(18, 17, 16, 0.92);
+  --v2-control: rgba(255, 255, 255, 0.03);
   --v2-border: rgba(168, 162, 158, 0.16);
   --v2-muted: #a9a29a;
   --v2-text: #f3eee7;
-  --v2-input: #11100f;
+  --v2-input: #080807;
 }
 
 .v2-light {
