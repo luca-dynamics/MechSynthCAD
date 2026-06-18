@@ -144,7 +144,7 @@ export function V2AppShell() {
       <div className="fixed left-3 top-3 z-40 lg:hidden"><button onClick={() => setSidebarOpen((value) => !value)} className="rounded-xl border border-v2-border bg-[#080807] px-3 py-2 text-sm text-v2-text">Missions</button></div>
       <V2MissionSidebar active={active} onSelect={setActive} open={sidebarOpen} />
       <V2MissionCenter active={active} state={mechanismState} messages={messages} activeTask={activeTask} onCommand={runAgentCommand} onNavigate={setActive} theme={theme} onThemeChange={setTheme} activeProvider={activeProvider} providers={providerStatuses} onProviderSelect={selectProvider} onMechanismSelect={selectMechanism} />
-      <V2OperationsPanel state={mechanismState} activeTask={activeTask} onOpenReports={() => setActive("Reports")} activeProvider={activeProvider} providers={providerStatuses} activityLog={activityLog} latestError={error ?? sliderCrankError} />
+      <V2OperationsPanel state={mechanismState} activeTask={activeTask} onOpenReports={() => setActive("Reports")} onOpenArtifact={(kind) => { setActive("Workspace"); window.dispatchEvent(new CustomEvent("v2-open-artifact", { detail: kind })); }} onCommand={runAgentCommand} activeProvider={activeProvider} providers={providerStatuses} activityLog={activityLog} latestError={error ?? sliderCrankError} />
     </div>
   </main>;
 }
