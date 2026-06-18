@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar, sweepSliderCrank } from "@/lib/api";
 import type { FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm, SynthesisResponse } from "@/types";
 import { v2ThemeClass, v2Tokens } from "@/components/v2/theme";
@@ -122,9 +122,9 @@ export function V2AppShell() {
 
   return <main className={`${v2ThemeClass[resolvedTheme]} ${v2Tokens.shell}`}>
     <V2TopBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((value) => !value)} theme={theme} onThemeChange={setTheme} taskState={activeTask} />
-    <div className="grid gap-4 p-4 lg:grid-cols-[250px_minmax(0,1fr)_390px]">
+    <div className="relative z-10 grid gap-4 p-3 sm:p-4 lg:grid-cols-[var(--v2-nav-width)_minmax(0,1fr)_390px]" style={{ "--v2-nav-width": sidebarOpen ? "250px" : "76px" } as CSSProperties}>
       <V2Sidebar active={active} onSelect={setActive} open={sidebarOpen} />
-      <section className="min-w-0 space-y-4">
+      <section className="min-w-0 space-y-4 pb-8">
         <V2OverviewPanel selectedMechanism={selectedMechanism} hasResult={Boolean(solverResult)} sampleCount={currentSweepResult?.sample_count ?? 0} activeTask={activeTask} />
         {active === "Workspace" || active === "Overview" ? <V2Workspace state={mechanismState} activeTask={activeTask} /> : null}
         {active === "Agent" ? <V2AgentConversation messages={messages} onAction={runAgentCommand} /> : null}
@@ -133,7 +133,7 @@ export function V2AppShell() {
         {active === "Validation" ? <V2ValidationPanel /> : null}
         {active === "Settings" ? <V2SettingsPanel theme={theme} onThemeChange={setTheme} /> : null}
       </section>
-      <V2InspectorPanel state={mechanismState} onOpenReports={() => setActive("Reports")} />
+      <div className="hidden xl:block"><V2InspectorPanel state={mechanismState} onOpenReports={() => setActive("Reports")} /></div>
     </div>
     <V2AgentComposer onSubmit={runAgentCommand} />
   </main>;
