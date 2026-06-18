@@ -6,6 +6,9 @@ export type V2NavItem = "Overview" | "Workspace" | "Results" | "Agent" | "Report
 export type V2InspectorTab = "Parameters" | "Results" | "Simulation" | "Synthesis" | "Report";
 export type V2AgentIntent = "analyze" | "simulate" | "report" | "synthesize" | "validate" | "missing_parameters" | "help";
 export type V2AgentStepStatus = "complete" | "blocked" | "pending";
+export type V2ProviderId = "local" | "openai" | "anthropic" | "gemini";
+export type V2ProviderStatus = { id: V2ProviderId; label: string; defaultModel: string; status: "configured" | "not_configured" | "connection_failed" | "local"; keySource: "Local deterministic" | "Dev Cloud key" | "BYOK" | "not connected"; authUrlAvailable?: boolean; message?: string };
+export type V2ActivityEvent = { id: string; at: string; type: string; message: string; status: "info" | "success" | "warning" | "error" };
 
 export type V2AgentStep = {
   label: string;
@@ -25,6 +28,9 @@ export type V2AgentMessage = {
   intent?: V2AgentIntent;
   steps?: V2AgentStep[];
   actions?: V2AgentAction[];
+  source?: V2ProviderId;
+  mechanism?: MechanismType;
+  status?: "pending" | "completed" | "blocked" | "failed";
 };
 
 export type V2MechanismState = {

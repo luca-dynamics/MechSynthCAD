@@ -1,15 +1,17 @@
 import { V2InspectorPanel } from "@/components/v2/V2InspectorPanel";
-import type { V2MechanismState } from "@/components/v2/types";
+import type { V2ActivityEvent, V2MechanismState, V2ProviderId, V2ProviderStatus } from "@/components/v2/types";
 
-export function V2OperationsPanel({ state, activeTask, onOpenReports }: { state: V2MechanismState; activeTask: string; onOpenReports: () => void }) {
+export function V2OperationsPanel({ state, activeTask, onOpenReports, activeProvider, providers, activityLog, latestError }: { state: V2MechanismState; activeTask: string; onOpenReports: () => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; activityLog: V2ActivityEvent[]; latestError: string | null }) {
   const mechanism = state.selectedMechanism === "four_bar" ? "Four-bar linkage" : "Slider-crank";
   const hasSweep = state.selectedMechanism === "four_bar" ? Boolean(state.sweepResult) : Boolean(state.sliderCrankSweepResult);
-  return <aside className="v2-scrollbar hidden h-[calc(100vh-1rem)] overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#080807] p-3 xl:block xl:sticky xl:top-2">
-    <Panel title="Model Assignment"><Rows rows={[["Orchestrator", "Local Deterministic Agent"], ["Solver", "Backend deterministic solver"], ["Reporter", "Local report builder"], ["Validator", "Local validation matrix"], ["External models", "Coming soon"]]} /></Panel>
-    <Panel title="Mechanism Context"><Rows rows={[["Selected", mechanism], ["Input completeness", "Numeric fields ready"], ["Result state", state.solverResult ? "Result available" : "Awaiting analysis"], ["Sweep state", hasSweep ? "Samples available" : "No sweep run"]]} /></Panel>
-    <Panel title="Mission Checklist"><Checklist items={["Parameter intake", "Analysis", "Simulation", "Synthesis", "Report", "Validation"]} active={state.solverResult ? 2 : 1} /></Panel>
-    <Panel title="Progress Log"><div className="space-y-2 text-xs text-v2-muted"><p>Now · {activeTask}</p><p>Recent · Mission shell initialized</p><p>Recent · Deterministic tools registered</p><p>Recent · Report and validation panels available</p></div></Panel>
-    <Panel title="Tool Status"><Rows rows={[["API health", "Placeholder ready"], ["Solver", "Deterministic active"], ["Report builder", "Available"], ["Validation", "Available"]]} /></Panel>
+  const provider = providers.find((item) => item.id === activeProvider) ?? providers[0];
+  const missing = Object.entries(state.inputParameters).filter(([, value]) => typeof value !== "number" || Number.isNaN(value));
+  return <aside className="v2-scrollbar mt-3 h-auto overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#080807] p-3 xl:sticky xl:top-2 xl:mt-0 xl:block xl:h-[calc(100vh-1rem)]">
+    <Panel title="Model Assignment"><Rows rows={[["Active provider", provider?.label ?? "Local Deterministic Agent"], ["Provider status", provider?.status.replace("_", " ") ?? "local"], ["Key source", provider?.keySource ?? "Local deterministic"], ["Default model", provider?.defaultModel ?? "backend deterministic solver"], ["Advisory rule", activeProvider === "local" ? "No external model" : "Model output advisory only"]]} /></Panel>
+    <Panel title="Mechanism Context"><Rows rows={[["Selected", mechanism], ["Input completeness", missing.length ? `Missing: ${missing.map(([key]) => key).join(", ")}` : "Numeric fields ready"], ["Result state", state.solverResult ? "Result available" : "Awaiting analysis"], ["Sweep state", hasSweep ? "Samples available" : "No sweep run"], ["Latest error", latestError ?? "None"]]} /></Panel>
+    <Panel title="Mission Checklist"><Checklist items={["Parameter intake", "Analysis", "Simulation", "Synthesis", "Report", "Validation"]} active={state.solverResult ? hasSweep ? 3 : 2 : 1} /></Panel>
+    <Panel title="Progress Log"><div className="space-y-2 text-xs text-v2-muted"><p>Now · {activeTask}</p>{activityLog.map((event) => <p key={event.id} className={event.status === "error" ? "text-red-400" : event.status === "success" ? "text-amber-500" : "text-v2-muted"}>{event.at} · {event.type} · {event.message}</p>)}</div></Panel>
+    <Panel title="Tool Status"><Rows rows={[["API health", "API health check not connected"], ["Solver", "Deterministic active"], ["Report builder", "Available"], ["Validation", "Available"]]} /></Panel>
     <div className="mt-3"><V2InspectorPanel state={state} onOpenReports={onOpenReports} /></div>
   </aside>;
 }
