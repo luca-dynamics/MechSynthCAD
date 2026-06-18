@@ -15,10 +15,10 @@ import { V2GuidedMissionChecklist } from "@/components/v2/V2GuidedMissionCheckli
 const drawerTitles: Record<V2ArtifactKind, string> = { canvas: "CAD Preview", parameters: "Parameter Intake", result: "Deterministic Result", simulation: "Sweep Simulation", report: "Report Draft", validation: "Validation Matrix", synthesis: "Synthesis Recommendation" };
 
 export function V2MissionCenter({ active, activeArtifact, state, messages, activeTask, onCommand, onNavigate, onOpenArtifact, onCloseArtifact, theme, onThemeChange, activeProvider, providers, onProviderSelect, onMechanismSelect, onStartTemplate, onOpenGuide, onResetMission }: { active: V2NavItem; activeArtifact: V2ArtifactKind | null; state: V2MechanismState; messages: V2AgentMessage[]; activeTask: string; onCommand: (command: string, modelProvider?: V2ProviderId) => void; onNavigate: (item: V2NavItem) => void; onOpenArtifact: (kind: V2ArtifactKind) => void; onCloseArtifact: () => void; theme: V2Theme; onThemeChange: (theme: V2Theme) => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; onProviderSelect: (provider: V2ProviderId) => void; onMechanismSelect: (mechanism: import("@/types").MechanismType) => void; onStartTemplate: (id: V2MissionTemplateId) => void; onOpenGuide: () => void; onResetMission: () => void }) {
-  if (active === "Reports") return <V2ReportPanel state={state} messages={messages} />;
+  if (active === "Reports") return <V2ReportPanel state={state} messages={messages} onCommand={onCommand} providers={providers} />;
   if (active === "Validation") return <V2ValidationPanel />;
   if (active === "Settings") return <V2SettingsPanel theme={theme} onThemeChange={onThemeChange} />;
-  if (active === "Results") return <section className="rounded-[1.4rem] border border-v2-border bg-[#0d0c0b] p-4"><V2ArtifactDetail kind="result" state={state} messages={messages} onCommand={onCommand} /></section>;
+  if (active === "Results") return <section className="rounded-[1.4rem] border border-v2-border bg-[#0d0c0b] p-4"><V2ArtifactDetail kind="result" state={state} messages={messages} onCommand={onCommand} providers={providers} /></section>;
   const mechanism = state.selectedMechanism === "four_bar" ? "Four-Bar Linkage" : "Slider-Crank";
   const sampleCount = state.selectedMechanism === "four_bar" ? state.sweepResult?.sample_count ?? 0 : state.sliderCrankSweepResult?.sample_count ?? 0;
   return <section className="v2-scrollbar h-[calc(100vh-1rem)] overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#0d0c0b] p-4 pb-36">
@@ -35,6 +35,6 @@ export function V2MissionCenter({ active, activeArtifact, state, messages, activ
       <V2ArtifactCard title="Synthesis Recommendation" status={state.latestSynthesisRecommendations ? "ready" : "idle"} summary={state.solverResult ? "Open synthesis recommendations from deterministic result context." : "Run analysis before synthesis recommendations."} action={state.solverResult ? "Open synthesis" : "Run analysis"} onAction={() => state.solverResult ? onOpenArtifact("synthesis") : onCommand("Run analysis")} />
     </div>
     <div className="mt-4 space-y-3"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-stone-500">Mission execution timeline</p>{messages.map((message) => <V2ToolRunCard key={message.id} message={message} onAction={onCommand} />)}</div>
-    <V2ArtifactDrawer open={Boolean(activeArtifact)} title={activeArtifact ? drawerTitles[activeArtifact] : "Artifact"} subtitle="Focused V2 detail view" onClose={onCloseArtifact} kind={activeArtifact}>{activeArtifact ? <V2ArtifactDetail kind={activeArtifact} state={state} messages={messages} onCommand={onCommand} /> : null}</V2ArtifactDrawer>
+    <V2ArtifactDrawer open={Boolean(activeArtifact)} title={activeArtifact ? drawerTitles[activeArtifact] : "Artifact"} subtitle="Focused V2 detail view" onClose={onCloseArtifact} kind={activeArtifact}>{activeArtifact ? <V2ArtifactDetail kind={activeArtifact} state={state} messages={messages} onCommand={onCommand} providers={providers} /> : null}</V2ArtifactDrawer>
   </section>;
 }

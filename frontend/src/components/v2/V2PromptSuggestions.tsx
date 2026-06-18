@@ -11,6 +11,7 @@ export function V2PromptSuggestions({ onCommand, activeProvider, onMechanismSele
     { label: "Explain deterministic result", run: () => submit("Explain the deterministic result") },
     { label: "Recommend design improvements", run: () => submit("Recommend design improvements") },
     { label: "Generate report", run: () => { onNavigate("Reports"); submit("Generate report"); } },
+    { label: "Prepare supervisor report", run: () => { onNavigate("Reports"); onOpenArtifact("report"); submit("Prepare supervisor report"); } },
     { label: "Validate workflow", run: () => { onOpenArtifact("validation"); submit("Validate the workflow"); } },
     { label: "Switch to slider-crank", run: () => onMechanismSelect("slider_crank") },
     { label: "Open parameter intake", run: () => onOpenArtifact("parameters") },
