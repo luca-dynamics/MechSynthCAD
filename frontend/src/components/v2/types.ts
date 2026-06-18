@@ -4,6 +4,7 @@ export type V2Theme = "dark" | "light" | "system";
 export type V2ResolvedTheme = "dark" | "light";
 export type V2NavItem = "Overview" | "Workspace" | "Results" | "Agent" | "Reports" | "Validation" | "Settings";
 export type V2InspectorTab = "Parameters" | "Results" | "Simulation" | "Synthesis" | "Report";
+export type V2ArtifactKind = "canvas" | "parameters" | "result" | "simulation" | "report" | "validation" | "synthesis";
 export type V2AgentIntent = "analyze" | "simulate" | "report" | "synthesize" | "validate" | "missing_parameters" | "help";
 export type V2AgentStepStatus = "complete" | "blocked" | "pending";
 export type V2ProviderId = "local" | "openai" | "anthropic" | "gemini";
