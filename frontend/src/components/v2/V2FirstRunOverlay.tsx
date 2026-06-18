@@ -59,6 +59,15 @@ export function V2FirstRunOverlay({
             </button>
           ))}
         </div>
+        <div className="mt-5 rounded-2xl border border-amber-600/25 bg-amber-500/10 p-4">
+          <p className="text-sm font-semibold text-amber-500">Guardrails</p>
+          <div className="mt-3 grid gap-2 text-xs text-v2-muted sm:grid-cols-2">
+            <p>Deterministic solver = numerical result.</p>
+            <p>Model provider = advisory planning, explanation, reporting.</p>
+            <p>Tool permission decides whether analysis/sweep endpoints must run.</p>
+            <p>BYOK/provider keys are not stored in V2 session memory.</p>
+          </div>
+        </div>
         <div className="mt-5 rounded-2xl border border-v2-border bg-[#080807] p-4">
           <p className="text-sm font-semibold">Layout map</p>
           <div className="mt-3 grid gap-2 text-xs text-v2-muted sm:grid-cols-2">

@@ -9,6 +9,7 @@ import type {
   V2ProviderStatus,
 } from "@/components/v2/types";
 import { V2GuidedMissionChecklist } from "@/components/v2/V2GuidedMissionChecklist";
+import { V2GuardrailBadge, V2SourceOfTruthBadge, V2ToolPermissionBadge } from "@/components/v2/V2GuardrailBadges";
 
 export function V2OperationsPanel({
   state,
@@ -65,6 +66,8 @@ export function V2OperationsPanel({
   return (
     <aside className="v2-scrollbar mt-3 h-auto overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#080807] p-3 xl:sticky xl:top-2 xl:mt-0 xl:block xl:h-[calc(100vh-1rem)]">
       <Panel title="Model Assignment">
+        <div className="mb-3 flex flex-wrap gap-2"><V2SourceOfTruthBadge /><V2GuardrailBadge label="Model advisory only" /><V2ToolPermissionBadge /></div>
+        <p className="mb-3 rounded-xl border border-v2-border bg-[#121110] p-3 text-[11px] leading-4 text-v2-muted">External model output is advisory. Solver values are produced by MechSynthCAD deterministic tools.</p>
         <Rows
           rows={[
             ["Active provider", provider?.label ?? "Local Deterministic Agent"],

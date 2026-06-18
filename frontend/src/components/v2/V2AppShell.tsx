@@ -26,6 +26,7 @@ import type { V2WorkspaceSession } from "@/components/v2/v2SessionPersistence";
 import { useV2SessionPersistence } from "@/components/v2/useV2SessionPersistence";
 import { useV2ProviderStatus } from "@/components/v2/useV2ProviderStatus";
 import { useV2MechanismRuntime } from "@/components/v2/useV2MechanismRuntime";
+import { buildV2GuardrailSteps, decideV2Permission } from "@/components/v2/v2Guardrails";
 
 const firstRunStorageKey = "mechsynthcad:v2:first-run-complete";
 
@@ -228,11 +229,22 @@ export function V2AppShell() {
         "info",
       );
       const intent = detectIntent(command);
+      const providerState = providerStatuses.find((provider) => provider.id === modelProvider);
+      const permission = decideV2Permission(command, { mechanism: selectedMechanism, hasDeterministicResult: Boolean(solverResult), provider: modelProvider, providerStatus: providerState });
+      const guardrailSteps = buildV2GuardrailSteps(permission);
+      appendActivity(setActivityLog, "guardrail", permission.allowed ? `Preflight: ${permission.requiresDeterministicTool ? `deterministic ${permission.toolName?.replaceAll("_", " ")} approved.` : `${permission.category} approved.`}` : `Preflight blocked: ${permission.reason}`, permission.allowed ? "success" : "warning");
       setMessages((thread) => [...thread, buildUserMessage(command)]);
-      if (modelProvider !== "local") {
-        const providerState = providerStatuses.find(
-          (provider) => provider.id === modelProvider,
-        );
+      if (!permission.allowed) {
+        setMessages((thread) => [
+          ...thread,
+          buildAgentMessage(`${permission.reason} ${permission.nextAction}.`, intent, guardrailSteps, defaultActions, "local", "blocked", selectedMechanism),
+        ]);
+        return;
+      }
+      if (permission.requiresDeterministicTool && modelProvider !== "local") {
+        appendActivity(setActivityLog, "guardrail", "Model advisory mode: external provider may explain but not calculate. Routing numerical request to deterministic solver.", "info");
+      }
+      if (modelProvider !== "local" && !permission.requiresDeterministicTool) {
         if (providerState?.status !== "configured") {
           const label = providerState?.label ?? modelProvider;
           const msg = `${label} is not configured. Add a Dev Cloud key or use BYOK in Settings.`;
@@ -243,11 +255,8 @@ export function V2AppShell() {
               msg,
               intent,
               [
-                {
-                  label: "Provider availability",
-                  status: "blocked",
-                  detail: msg,
-                },
+                ...guardrailSteps,
+                { label: "Provider availability", status: "blocked", detail: `${msg} Deterministic solver commands remain available.` },
               ],
               defaultActions,
               modelProvider,
@@ -263,6 +272,7 @@ export function V2AppShell() {
             `Routing prompt to ${modelProvider} with current workspace context.`,
             intent,
             [
+              ...guardrailSteps,
               completeStep("Model selected", modelProvider),
               completeStep(
                 "Provider request",
@@ -304,6 +314,7 @@ export function V2AppShell() {
               json.text ?? "Model returned no text.",
               intent,
               [
+                ...guardrailSteps,
                 completeStep(
                   "Model selected",
                   `${modelProvider}${json.model ? ` · ${json.model}` : ""}`,
@@ -365,7 +376,7 @@ export function V2AppShell() {
       }
       const missing = findMissingInputs(selectedMechanism, inputParameters);
       const hasResult = Boolean(solverResult);
-      const preSteps = buildPreflightSteps(intent, missing, hasResult);
+      const preSteps = [...guardrailSteps, ...buildPreflightSteps(intent, missing, hasResult)];
       if (
         missing.length > 0 &&
         (intent === "analyze" || intent === "simulate")
@@ -390,7 +401,7 @@ export function V2AppShell() {
           setActivityLog,
           "solver",
           response
-            ? "Analysis completed with deterministic backend output."
+            ? "Solver source-of-truth: backend analysis endpoint executed."
             : "Analysis failed or returned no deterministic output.",
           response ? "success" : "error",
         );
@@ -428,7 +439,7 @@ export function V2AppShell() {
           setActivityLog,
           "solver",
           response
-            ? "Sweep simulation completed with deterministic samples."
+            ? "Solver source-of-truth: backend sweep endpoint executed."
             : "Sweep failed or returned no deterministic output.",
           response ? "success" : "error",
         );
@@ -694,6 +705,7 @@ function detectIntent(command: string): V2AgentIntent {
   )
     return "synthesize";
   if (normalized.includes("validate")) return "validate";
+  if (/\b(explain|interpret|summari[sz]e)\b/.test(normalized)) return "help";
   if (normalized.includes("missing")) return "missing_parameters";
   if (normalized.includes("help")) return "help";
   return "analyze";
@@ -760,7 +772,11 @@ function buildNonSolverReply(
       : "Run analysis or simulation first; synthesis recommendations need deterministic result context.";
   if (intent === "validate")
     return "Opening validation context. This documents solver boundaries and source-of-truth rules.";
-  return "I can run analysis, run a sweep simulation, generate a report, recommend improvement direction, or list missing parameters.";
+  if (/\b(explain|interpret|summari[sz]e)\b/i.test(command))
+    return solverResult
+      ? "I can explain the existing deterministic solver result as advisory interpretation. Solver values remain the numerical source of truth."
+      : "No deterministic result exists yet. Run deterministic analysis first.";
+  return "I can run analysis, run a sweep simulation, generate a report, recommend improvement direction after deterministic results exist, or list missing parameters. Unknown commands are preflighted instead of treated as solved.";
 }
 
 function summarizeDeterministicOutput(result: Record<string, unknown> | null) {

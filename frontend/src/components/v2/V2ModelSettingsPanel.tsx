@@ -50,7 +50,7 @@ export function V2ModelSettingsPanel() {
 
   return <section className="rounded-[1.25rem] border border-v2-border bg-[#0d0c0b] p-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">Models + BYOK</p><h3 className="mt-2 text-lg font-semibold">Live model connections</h3></div>
+      <div><p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">Models + BYOK</p><h3 className="mt-2 text-lg font-semibold">Live model connections</h3><p className="mt-2 max-w-2xl text-xs leading-5 text-v2-muted">External model output is advisory. Solver values are produced by MechSynthCAD deterministic tools, and BYOK keys are verified for the session only, not saved in V2 session memory.</p></div>
       <span className="rounded-full border border-amber-600/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-500">server-routed calls</span>
     </div>
     <p className="mt-3 text-sm leading-6 text-v2-muted">Use Dev Cloud keys from environment variables or paste a BYOK key for a live verification. BYOK keys are sent only to the local Next API route for this request and are not stored in this UI.</p>
