@@ -1,14 +1,17 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import type { MechanismType } from "@/types";
 import type { V2ArtifactKind, V2NavItem, V2ProviderId, V2ProviderStatus } from "@/components/v2/types";
 import { V2PromptSuggestions } from "@/components/v2/V2PromptSuggestions";
+import { V2GuardrailBadge, V2SourceOfTruthBadge, V2ToolPermissionBadge } from "@/components/v2/V2GuardrailBadges";
+import { decideV2Permission } from "@/components/v2/v2Guardrails";
 
 type Chip = { label: string; action: () => void; disabled?: boolean; hint?: string };
 
-export function V2CommandDock({ onSubmit, activeProvider, providers, onProviderSelect, onMechanismSelect, onNavigate, onOpenArtifact }: { onSubmit: (command: string, modelProvider?: V2ProviderId) => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; onProviderSelect: (provider: V2ProviderId) => void; onMechanismSelect: (mechanism: MechanismType) => void; onNavigate: (item: V2NavItem) => void; onOpenArtifact: (kind: V2ArtifactKind) => void }) {
+export function V2CommandDock({ onSubmit, activeProvider, providers, selectedMechanism, hasDeterministicResult, onProviderSelect, onMechanismSelect, onNavigate, onOpenArtifact }: { onSubmit: (command: string, modelProvider?: V2ProviderId) => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; selectedMechanism: MechanismType; hasDeterministicResult: boolean; onProviderSelect: (provider: V2ProviderId) => void; onMechanismSelect: (mechanism: MechanismType) => void; onNavigate: (item: V2NavItem) => void; onOpenArtifact: (kind: V2ArtifactKind) => void }) {
   const [value, setValue] = useState("");
   function submit(event: FormEvent) { event.preventDefault(); const command = value.trim(); if (!command) return; onSubmit(command, activeProvider); setValue(""); }
   const byId = Object.fromEntries(providers.map((p) => [p.id, p]));
+  const preview = useMemo(() => decideV2Permission(value, { mechanism: selectedMechanism, hasDeterministicResult, provider: activeProvider, providerStatus: byId[activeProvider] }), [activeProvider, byId, hasDeterministicResult, selectedMechanism, value]);
   const chips: Chip[] = [
     { label: "Local Agent", action: () => onProviderSelect("local") },
     { label: "GPT", action: () => onProviderSelect("openai"), hint: byId.openai?.message },
@@ -22,6 +25,8 @@ export function V2CommandDock({ onSubmit, activeProvider, providers, onProviderS
   ];
   return <form onSubmit={submit} className="rounded-[1.65rem] border border-v2-border bg-[#050505] p-3 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
     <textarea value={value} onChange={(event) => setValue(event.target.value)} rows={3} placeholder="Ask the agent to analyze a mechanism, render a CAD view, plot a graph, build a report, or prepare a presentation…" className="min-h-20 w-full resize-none rounded-2xl border border-v2-border bg-[#080807] px-4 py-3 text-sm text-v2-text outline-none placeholder:text-stone-600 focus:border-amber-600/50" />
+    <div className="mt-2 flex flex-wrap gap-2"><V2SourceOfTruthBadge /><V2GuardrailBadge /><V2ToolPermissionBadge decision={preview} /></div>
+    <div className="mt-3 rounded-2xl border border-v2-border bg-[#0d0c0b] px-3 py-2 text-[11px] text-v2-muted"><span className="font-semibold uppercase tracking-[0.14em] text-amber-500">Preflight</span> · Category: {preview.category} · Permission: {preview.requiresDeterministicTool ? "deterministic solver required" : preview.allowed ? "advisory/navigation allowed" : "blocked"}{preview.toolName ? ` · Tool: ${preview.toolName.replaceAll("_", " ")}` : ""} · Note: {preview.warning ?? preview.reason}</div>
     <div className="mt-3"><V2PromptSuggestions onCommand={onSubmit} activeProvider={activeProvider} onMechanismSelect={onMechanismSelect} onOpenArtifact={onOpenArtifact} onNavigate={onNavigate} onPrefill={setValue} /></div><div className="mt-3 flex flex-wrap items-center gap-2">{chips.map((chip) => <button title={chip.hint} type="button" key={chip.label} disabled={chip.disabled} onClick={chip.action} className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold ${chip.label.toLowerCase().includes(activeProvider === "openai" ? "gpt" : activeProvider === "anthropic" ? "claude" : activeProvider === "gemini" ? "gemini" : "local") ? "border-amber-600/50 bg-amber-500/10 text-amber-500" : "border-v2-border bg-[#121110] text-v2-muted hover:border-amber-600/40 hover:text-amber-500"}`}>{chip.label}</button>)}<select value={activeProvider} onChange={(event) => onProviderSelect(event.target.value as V2ProviderId)} className="ml-auto rounded-full border border-v2-border bg-[#121110] px-3 py-1.5 text-[11px] text-v2-muted">{providers.map((p) => <option key={p.id} value={p.id}>{p.label} · {p.status === "configured" || p.status === "local" ? "ready" : "not configured"}</option>)}</select><button className="rounded-full bg-amber-600 px-5 py-2 text-sm font-bold text-black hover:bg-amber-500">Send</button></div>
   </form>;
 }
