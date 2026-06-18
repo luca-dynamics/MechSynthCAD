@@ -1,20 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar, sweepSliderCrank } from "@/lib/api";
 import type { FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm, SynthesisResponse } from "@/types";
 import { v2ThemeClass, v2Tokens } from "@/components/v2/theme";
 import type { V2AgentIntent, V2AgentMessage, V2AgentStep, V2MechanismState, V2NavItem, V2ResolvedTheme, V2Theme } from "@/components/v2/types";
-import { V2AgentComposer } from "@/components/v2/V2AgentComposer";
-import { V2AgentConversation } from "@/components/v2/V2AgentConversation";
-import { V2InspectorPanel } from "@/components/v2/V2InspectorPanel";
-import { V2OverviewPanel } from "@/components/v2/V2OverviewPanel";
-import { V2ReportPanel } from "@/components/v2/V2ReportPanel";
-import { V2SettingsPanel } from "@/components/v2/V2SettingsPanel";
-import { V2Sidebar } from "@/components/v2/V2Sidebar";
-import { V2TopBar } from "@/components/v2/V2TopBar";
-import { V2ValidationPanel } from "@/components/v2/V2ValidationPanel";
-import { V2Workspace } from "@/components/v2/V2Workspace";
+import { V2MissionCenter } from "@/components/v2/V2MissionCenter";
+import { V2MissionSidebar } from "@/components/v2/V2MissionSidebar";
+import { V2OperationsPanel } from "@/components/v2/V2OperationsPanel";
 
 const initialForm: FourBarForm = { l1: 120, l2: 35, l3: 90, l4: 80, theta2_deg: 30, omega2: 10, alpha2: 0 };
 const initialSweep: SweepForm = { theta2_start_deg: 0, theta2_end_deg: 360, theta2_step_deg: 10 };
@@ -121,21 +114,12 @@ export function V2AppShell() {
   }, [inputParameters, runAnalysis, runSliderCrankAnalysis, runSliderCrankSweep, runSweep, selectedMechanism, solverResult]);
 
   return <main className={`${v2ThemeClass[resolvedTheme]} ${v2Tokens.shell}`}>
-    <V2TopBar sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((value) => !value)} theme={theme} onThemeChange={setTheme} taskState={activeTask} />
-    <div className="relative z-10 grid gap-4 p-3 sm:p-4 lg:grid-cols-[var(--v2-nav-width)_minmax(0,1fr)_390px]" style={{ "--v2-nav-width": sidebarOpen ? "250px" : "76px" } as CSSProperties}>
-      <V2Sidebar active={active} onSelect={setActive} open={sidebarOpen} />
-      <section className="min-w-0 space-y-4 pb-8">
-        <V2OverviewPanel selectedMechanism={selectedMechanism} hasResult={Boolean(solverResult)} sampleCount={currentSweepResult?.sample_count ?? 0} activeTask={activeTask} />
-        {active === "Workspace" || active === "Overview" ? <V2Workspace state={mechanismState} activeTask={activeTask} /> : null}
-        {active === "Agent" ? <V2AgentConversation messages={messages} onAction={runAgentCommand} /> : null}
-        {active === "Results" ? <V2InspectorPanel state={mechanismState} onOpenReports={() => setActive("Reports")} /> : null}
-        {active === "Reports" ? <V2ReportPanel state={mechanismState} messages={messages} /> : null}
-        {active === "Validation" ? <V2ValidationPanel /> : null}
-        {active === "Settings" ? <V2SettingsPanel theme={theme} onThemeChange={setTheme} /> : null}
-      </section>
-      <div className="hidden xl:block"><V2InspectorPanel state={mechanismState} onOpenReports={() => setActive("Reports")} /></div>
+    <div className="relative z-10 grid min-h-screen gap-3 p-2 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_390px]">
+      <div className="fixed left-3 top-3 z-40 lg:hidden"><button onClick={() => setSidebarOpen((value) => !value)} className="rounded-xl border border-v2-border bg-[#080807] px-3 py-2 text-sm text-v2-text">Missions</button></div>
+      <V2MissionSidebar active={active} onSelect={setActive} open={sidebarOpen} />
+      <V2MissionCenter active={active} state={mechanismState} messages={messages} activeTask={activeTask} onCommand={runAgentCommand} onNavigate={setActive} theme={theme} onThemeChange={setTheme} />
+      <V2OperationsPanel state={mechanismState} activeTask={activeTask} onOpenReports={() => setActive("Reports")} />
     </div>
-    <V2AgentComposer onSubmit={runAgentCommand} />
   </main>;
 }
 
