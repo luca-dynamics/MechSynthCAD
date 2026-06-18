@@ -10,7 +10,7 @@ import { V2ToolRunCard } from "@/components/v2/V2ToolRunCard";
 import { V2ValidationPanel } from "@/components/v2/V2ValidationPanel";
 import type { V2Theme } from "@/components/v2/types";
 
-export function V2MissionCenter({ active, state, messages, activeTask, onCommand, onNavigate, theme, onThemeChange }: { active: V2NavItem; state: V2MechanismState; messages: V2AgentMessage[]; activeTask: string; onCommand: (command: string) => void; onNavigate: (item: V2NavItem) => void; theme: V2Theme; onThemeChange: (theme: V2Theme) => void }) {
+export function V2MissionCenter({ active, state, messages, activeTask, onCommand, onNavigate, theme, onThemeChange }: { active: V2NavItem; state: V2MechanismState; messages: V2AgentMessage[]; activeTask: string; onCommand: (command: string, modelProvider?: string) => void; onNavigate: (item: V2NavItem) => void; theme: V2Theme; onThemeChange: (theme: V2Theme) => void }) {
   if (active === "Reports") return <V2ReportPanel state={state} messages={messages} />;
   if (active === "Validation") return <V2ValidationPanel />;
   if (active === "Settings") return <V2SettingsPanel theme={theme} onThemeChange={onThemeChange} />;

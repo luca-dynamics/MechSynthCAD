@@ -86,9 +86,21 @@ export function V2AppShell() {
     inputParameters, solverResult: solverResult as Record<string, unknown> | null, sweepResultForReport: currentSweepResult as Record<string, unknown> | null, latestSynthesisRecommendations, setLatestSynthesisRecommendations,
   };
 
-  const runAgentCommand = useCallback(async (command: string) => {
+  const runAgentCommand = useCallback(async (command: string, modelProvider = "local") => {
     const intent = detectIntent(command);
     setMessages((thread) => [...thread, buildUserMessage(command)]);
+    if (modelProvider !== "local") {
+      setMessages((thread) => [...thread, buildAgentMessage(`Routing prompt to ${modelProvider} with current workspace context.`, intent, [completeStep("Model selected", modelProvider), completeStep("Provider request", "Calling the server-side model route without exposing Dev Cloud keys to the browser."), { label: "Model response", status: "pending", detail: "Waiting for provider completion." }], defaultActions)]);
+      try {
+        const response = await fetch("/api/v2/models/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: modelProvider, prompt: command, context: { selectedMechanism, inputParameters, solverResult } }) });
+        const json = await response.json() as { ok?: boolean; text?: string; error?: string; model?: string };
+        if (!response.ok || !json.ok) throw new Error(json.error ?? "Model request failed");
+        setMessages((thread) => [...thread, buildAgentMessage(json.text ?? "Model returned no text.", intent, [completeStep("Model selected", `${modelProvider}${json.model ? ` · ${json.model}` : ""}`), completeStep("Provider request", "Server-side model call completed."), completeStep("Workspace artifact guidance", "Use deterministic solver tools for numerical mechanism truth; use model output for planning, explanation, tables, charts, and presentation drafting.")], defaultActions)]);
+      } catch (modelError) {
+        setMessages((thread) => [...thread, buildAgentMessage(modelError instanceof Error ? modelError.message : "Model request failed", intent, [completeStep("Model selected", modelProvider), { label: "Provider request", status: "blocked", detail: "Connection failed. Add a Dev Cloud key in .env or verify a BYOK key in Settings." }], defaultActions)]);
+      }
+      return;
+    }
     const missing = findMissingInputs(selectedMechanism, inputParameters);
     const hasResult = Boolean(solverResult);
     const preSteps = buildPreflightSteps(intent, missing, hasResult);
