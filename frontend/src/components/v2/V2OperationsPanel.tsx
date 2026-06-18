@@ -1,7 +1,10 @@
-import { V2InspectorPanel } from "@/components/v2/V2InspectorPanel";
+import type React from "react";
+import { V2CompactInspector } from "@/components/v2/V2ArtifactDetail";
 import type { V2ActivityEvent, V2MechanismState, V2ProviderId, V2ProviderStatus } from "@/components/v2/types";
 
-export function V2OperationsPanel({ state, activeTask, onOpenReports, activeProvider, providers, activityLog, latestError }: { state: V2MechanismState; activeTask: string; onOpenReports: () => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; activityLog: V2ActivityEvent[]; latestError: string | null }) {
+type ArtifactKind = "canvas" | "parameters" | "result" | "simulation" | "report" | "validation" | "synthesis";
+
+export function V2OperationsPanel({ state, activeTask, onOpenReports, onOpenArtifact, onCommand, activeProvider, providers, activityLog, latestError }: { state: V2MechanismState; activeTask: string; onOpenReports: () => void; onOpenArtifact: (kind: ArtifactKind) => void; onCommand: (command: string) => void; activeProvider: V2ProviderId; providers: V2ProviderStatus[]; activityLog: V2ActivityEvent[]; latestError: string | null }) {
   const mechanism = state.selectedMechanism === "four_bar" ? "Four-bar linkage" : "Slider-crank";
   const hasSweep = state.selectedMechanism === "four_bar" ? Boolean(state.sweepResult) : Boolean(state.sliderCrankSweepResult);
   const provider = providers.find((item) => item.id === activeProvider) ?? providers[0];
@@ -9,10 +12,10 @@ export function V2OperationsPanel({ state, activeTask, onOpenReports, activeProv
   return <aside className="v2-scrollbar mt-3 h-auto overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#080807] p-3 xl:sticky xl:top-2 xl:mt-0 xl:block xl:h-[calc(100vh-1rem)]">
     <Panel title="Model Assignment"><Rows rows={[["Active provider", provider?.label ?? "Local Deterministic Agent"], ["Provider status", provider?.status.replace("_", " ") ?? "local"], ["Key source", provider?.keySource ?? "Local deterministic"], ["Default model", provider?.defaultModel ?? "backend deterministic solver"], ["Advisory rule", activeProvider === "local" ? "No external model" : "Model output advisory only"]]} /></Panel>
     <Panel title="Mechanism Context"><Rows rows={[["Selected", mechanism], ["Input completeness", missing.length ? `Missing: ${missing.map(([key]) => key).join(", ")}` : "Numeric fields ready"], ["Result state", state.solverResult ? "Result available" : "Awaiting analysis"], ["Sweep state", hasSweep ? "Samples available" : "No sweep run"], ["Latest error", latestError ?? "None"]]} /></Panel>
+    <Panel title="Compact Inspector"><V2CompactInspector state={state} onOpenArtifact={onOpenArtifact} onCommand={onCommand} /></Panel>
     <Panel title="Mission Checklist"><Checklist items={["Parameter intake", "Analysis", "Simulation", "Synthesis", "Report", "Validation"]} active={state.solverResult ? hasSweep ? 3 : 2 : 1} /></Panel>
     <Panel title="Progress Log"><div className="space-y-2 text-xs text-v2-muted"><p>Now · {activeTask}</p>{activityLog.map((event) => <p key={event.id} className={event.status === "error" ? "text-red-400" : event.status === "success" ? "text-amber-500" : "text-v2-muted"}>{event.at} · {event.type} · {event.message}</p>)}</div></Panel>
-    <Panel title="Tool Status"><Rows rows={[["API health", "API health check not connected"], ["Solver", "Deterministic active"], ["Report builder", "Available"], ["Validation", "Available"]]} /></Panel>
-    <div className="mt-3"><V2InspectorPanel state={state} onOpenReports={onOpenReports} /></div>
+    <Panel title="Tool Status"><Rows rows={[["API health", "API health check not connected"], ["Solver", "Deterministic active"], ["Report builder", "Available"], ["Validation", "Available"]]} /><button onClick={onOpenReports} className="mt-3 rounded-xl border border-v2-border bg-[#191715] px-3 py-2 text-xs font-semibold text-v2-muted hover:text-amber-500">Open reports</button></Panel>
   </aside>;
 }
 
