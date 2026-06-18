@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { analyzeFourBar, analyzeSliderCrank, sweepFourBar, sweepSliderCrank } from "@/lib/api";
 import type { FourBarAnalysisResult, FourBarForm, FourBarSweepResponse, MechanismType, SliderCrankAnalysisResult, SliderCrankForm, SliderCrankSweepForm, SliderCrankSweepResponse, SweepForm, SynthesisResponse } from "@/types";
 import { v2ThemeClass, v2Tokens } from "@/components/v2/theme";
-import type { V2AgentIntent, V2AgentMessage, V2AgentStep, V2MechanismState, V2NavItem, V2ResolvedTheme, V2Theme, V2ActivityEvent, V2ProviderId, V2ProviderStatus } from "@/components/v2/types";
+import type { V2AgentIntent, V2AgentMessage, V2AgentStep, V2MechanismState, V2NavItem, V2ResolvedTheme, V2Theme, V2ActivityEvent, V2ArtifactKind, V2ProviderId, V2ProviderStatus } from "@/components/v2/types";
 import { V2MissionCenter } from "@/components/v2/V2MissionCenter";
 import { V2MissionSidebar } from "@/components/v2/V2MissionSidebar";
 import { V2OperationsPanel } from "@/components/v2/V2OperationsPanel";
@@ -16,6 +16,7 @@ const initialSliderCrankSweep: SliderCrankSweepForm = { theta_start_deg: 0, thet
 
 export function V2AppShell() {
   const [active, setActive] = useState<V2NavItem>("Workspace");
+  const [activeArtifact, setActiveArtifact] = useState<V2ArtifactKind | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState<V2Theme>("dark");
   const [selectedMechanism, setSelectedMechanism] = useState<MechanismType>("four_bar");
@@ -143,8 +144,8 @@ export function V2AppShell() {
     <div className="relative z-10 grid min-h-screen gap-3 p-2 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_390px]">
       <div className="fixed left-3 top-3 z-40 lg:hidden"><button onClick={() => setSidebarOpen((value) => !value)} className="rounded-xl border border-v2-border bg-[#080807] px-3 py-2 text-sm text-v2-text">Missions</button></div>
       <V2MissionSidebar active={active} onSelect={setActive} open={sidebarOpen} />
-      <V2MissionCenter active={active} state={mechanismState} messages={messages} activeTask={activeTask} onCommand={runAgentCommand} onNavigate={setActive} theme={theme} onThemeChange={setTheme} activeProvider={activeProvider} providers={providerStatuses} onProviderSelect={selectProvider} onMechanismSelect={selectMechanism} />
-      <V2OperationsPanel state={mechanismState} activeTask={activeTask} onOpenReports={() => setActive("Reports")} onOpenArtifact={(kind) => { setActive("Workspace"); window.dispatchEvent(new CustomEvent("v2-open-artifact", { detail: kind })); }} onCommand={runAgentCommand} activeProvider={activeProvider} providers={providerStatuses} activityLog={activityLog} latestError={error ?? sliderCrankError} />
+      <V2MissionCenter active={active} activeArtifact={activeArtifact} state={mechanismState} messages={messages} activeTask={activeTask} onCommand={runAgentCommand} onNavigate={setActive} onOpenArtifact={setActiveArtifact} onCloseArtifact={() => setActiveArtifact(null)} theme={theme} onThemeChange={setTheme} activeProvider={activeProvider} providers={providerStatuses} onProviderSelect={selectProvider} onMechanismSelect={selectMechanism} />
+      <V2OperationsPanel state={mechanismState} activeTask={activeTask} onOpenReports={() => setActive("Reports")} activeArtifact={activeArtifact} onOpenArtifact={(kind) => { setActive("Workspace"); setActiveArtifact(kind); }} onCloseArtifact={() => setActiveArtifact(null)} onCommand={runAgentCommand} activeProvider={activeProvider} providers={providerStatuses} activityLog={activityLog} latestError={error ?? sliderCrankError} />
     </div>
   </main>;
 }
