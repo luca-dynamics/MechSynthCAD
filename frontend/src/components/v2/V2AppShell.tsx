@@ -1,61 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  analyzeFourBar,
-  analyzeSliderCrank,
-  sweepFourBar,
-  sweepSliderCrank,
-} from "@/lib/api";
-import type {
-  FourBarAnalysisResult,
-  FourBarForm,
-  FourBarSweepResponse,
-  MechanismType,
-  SliderCrankAnalysisResult,
-  SliderCrankForm,
-  SliderCrankSweepForm,
-  SliderCrankSweepResponse,
-  SweepForm,
-  SynthesisResponse,
-} from "@/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { MechanismType } from "@/types";
 import { v2ThemeClass, v2Tokens } from "@/components/v2/theme";
 import type {
   V2AgentIntent,
   V2AgentMessage,
   V2AgentStep,
-  V2MechanismState,
   V2NavItem,
   V2ResolvedTheme,
   V2Theme,
   V2ActivityEvent,
   V2ArtifactKind,
   V2ProviderId,
-  V2ProviderStatus,
 } from "@/components/v2/types";
 import { V2MissionCenter } from "@/components/v2/V2MissionCenter";
 import { V2MissionSidebar } from "@/components/v2/V2MissionSidebar";
 import { V2OperationsPanel } from "@/components/v2/V2OperationsPanel";
 import { V2FirstRunOverlay } from "@/components/v2/V2FirstRunOverlay";
 import {
-  fourBarDemoParameters,
-  fourBarDemoSweep,
   getV2MissionTemplate,
-  sliderCrankDemoParameters,
-  sliderCrankDemoSweep,
   type V2MissionTemplateId,
 } from "@/components/v2/missionTemplates";
-import {
-  clearV2Session,
-  loadV2Session,
-  saveV2Session,
-  type V2WorkspaceSession,
-} from "@/components/v2/v2SessionPersistence";
+import type { V2WorkspaceSession } from "@/components/v2/v2SessionPersistence";
+import { useV2SessionPersistence } from "@/components/v2/useV2SessionPersistence";
+import { useV2ProviderStatus } from "@/components/v2/useV2ProviderStatus";
+import { useV2MechanismRuntime } from "@/components/v2/useV2MechanismRuntime";
 
-const initialForm: FourBarForm = fourBarDemoParameters;
-const initialSweep: SweepForm = fourBarDemoSweep;
-const initialSliderCrankForm: SliderCrankForm = sliderCrankDemoParameters;
-const initialSliderCrankSweep: SliderCrankSweepForm = sliderCrankDemoSweep;
 const firstRunStorageKey = "mechsynthcad:v2:first-run-complete";
 
 export function V2AppShell() {
@@ -65,36 +36,6 @@ export function V2AppShell() {
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [theme, setTheme] = useState<V2Theme>("dark");
-  const [selectedMechanism, setSelectedMechanism] =
-    useState<MechanismType>("four_bar");
-  const [form, setForm] = useState<FourBarForm>(initialForm);
-  const [sweepForm, setSweepForm] = useState<SweepForm>(initialSweep);
-  const [result, setResult] = useState<FourBarAnalysisResult | null>(null);
-  const [sweepResult, setSweepResult] = useState<FourBarSweepResponse | null>(
-    null,
-  );
-  const [selectedSampleIndex, setSelectedSampleIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSweeping, setIsSweeping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sliderCrankForm, setSliderCrankForm] = useState<SliderCrankForm>(
-    initialSliderCrankForm,
-  );
-  const [sliderCrankResult, setSliderCrankResult] =
-    useState<SliderCrankAnalysisResult | null>(null);
-  const [sliderCrankSweepForm, setSliderCrankSweepForm] =
-    useState<SliderCrankSweepForm>(initialSliderCrankSweep);
-  const [sliderCrankSweepResult, setSliderCrankSweepResult] =
-    useState<SliderCrankSweepResponse | null>(null);
-  const [selectedSliderCrankSampleIndex, setSelectedSliderCrankSampleIndex] =
-    useState(0);
-  const [isSliderCrankPlaying, setIsSliderCrankPlaying] = useState(false);
-  const [isSliderCrankSweeping, setIsSliderCrankSweeping] = useState(false);
-  const [isSliderCrankLoading, setIsSliderCrankLoading] = useState(false);
-  const [sliderCrankError, setSliderCrankError] = useState<string | null>(null);
-  const [latestSynthesisRecommendations, setLatestSynthesisRecommendations] =
-    useState<SynthesisResponse | null>(null);
   const [messages, setMessages] = useState<V2AgentMessage[]>([
     buildAgentMessage(
       "Deterministic Engineering Agent ready. I can inspect parameters, select existing solver tools, summarize returned values, and prepare report-ready next steps without calculating engineering values myself.",
@@ -107,9 +48,7 @@ export function V2AppShell() {
     ),
   ]);
   const [activeProvider, setActiveProvider] = useState<V2ProviderId>("local");
-  const [providerStatuses, setProviderStatuses] = useState<V2ProviderStatus[]>(
-    defaultProviderStatuses,
-  );
+  const { providerStatuses } = useV2ProviderStatus();
   const [activityLog, setActivityLog] = useState<V2ActivityEvent[]>([
     buildActivity(
       "system",
@@ -118,164 +57,46 @@ export function V2AppShell() {
     ),
   ]);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [sessionStatus, setSessionStatus] = useState<
-    "Local session" | "Saving…" | "Saved" | "Restored"
-  >("Local session");
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
-  const [restoreBannerOpen, setRestoreBannerOpen] = useState(false);
-  const hasLoadedSession = useRef(false);
-  const skipNextAutoSave = useRef(false);
-  const saveTimer = useRef<number | null>(null);
+
+  const appendWorkspaceActivity = useCallback(
+    (type: string, message: string, status: V2ActivityEvent["status"]) => {
+      appendActivity(setActivityLog, type, message, status);
+    },
+    [],
+  );
+
+  const {
+    mechanismState,
+    selectedMechanism,
+    setSelectedMechanism,
+    inputParameters,
+    solverResult,
+    activeTask,
+    latestError,
+    runAnalysis,
+    runSliderCrankAnalysis,
+    runSweep,
+    runSliderCrankSweep,
+    resetMechanismRuntime,
+    loadMissionTemplateMechanism,
+    buildMechanismSession,
+    restoreMechanismSession,
+  } = useV2MechanismRuntime(appendWorkspaceActivity);
 
   const resolvedTheme: V2ResolvedTheme = theme === "light" ? "light" : "dark";
-  const displayResult = useFourBarDisplayResult(
-    result,
-    sweepResult,
-    selectedSampleIndex,
-  );
-  const displaySliderCrankResult = useSliderCrankDisplayResult(
-    sliderCrankResult,
-    sliderCrankSweepResult,
-    selectedSliderCrankSampleIndex,
-    sliderCrankForm,
-  );
-  const solverResult =
-    selectedMechanism === "four_bar"
-      ? displayResult || result
-      : displaySliderCrankResult;
-  const currentSweepResult =
-    selectedMechanism === "four_bar" ? sweepResult : sliderCrankSweepResult;
-  const inputParameters =
-    selectedMechanism === "four_bar" ? form : sliderCrankForm;
-  const activeTask =
-    isLoading || isSliderCrankLoading
-      ? "analysis running"
-      : isSweeping || isSliderCrankSweeping
-        ? "simulation running"
-        : solverResult
-          ? "solver result ready"
-          : "waiting for command";
-
   useEffect(() => {
-    if (!isPlaying || !sweepResult?.samples.length) return;
-    const interval = window.setInterval(
-      () =>
-        setSelectedSampleIndex(
-          (index) => (index + 1) % sweepResult.samples.length,
-        ),
-      180,
-    );
-    return () => window.clearInterval(interval);
-  }, [isPlaying, sweepResult]);
-  useEffect(() => {
-    if (!isSliderCrankPlaying || !sliderCrankSweepResult?.samples.length)
-      return;
-    const interval = window.setInterval(
-      () =>
-        setSelectedSliderCrankSampleIndex(
-          (index) => (index + 1) % sliderCrankSweepResult.samples.length,
-        ),
-      180,
-    );
-    return () => window.clearInterval(interval);
-  }, [isSliderCrankPlaying, sliderCrankSweepResult]);
-  useEffect(() => {
-    setIsPlaying(false);
-    setIsSliderCrankPlaying(false);
-    setLatestSynthesisRecommendations(null);
-  }, [selectedMechanism]);
-  useEffect(() => {
-    const loaded = loadV2Session();
-    if (loaded.status === "restored") {
-      restoreSession(loaded.session);
-      setSessionStatus("Restored");
-      setLastSavedAt(loaded.session.savedAt);
-      setRestoreBannerOpen(true);
-      appendActivity(
-        setActivityLog,
-        "session",
-        "Previous V2 workspace session restored.",
-        "success",
-      );
-    } else {
-      appendActivity(
-        setActivityLog,
-        "session",
-        loaded.status === "invalid"
-          ? "Saved V2 workspace session was invalid; safe defaults loaded."
-          : "No saved V2 workspace session found.",
-        loaded.status === "invalid" ? "warning" : "info",
-      );
-      if (loaded.status === "invalid") clearV2Session();
-    }
-    hasLoadedSession.current = true;
     if (window.localStorage.getItem(firstRunStorageKey) !== "true")
       setGuideOpen(true);
-  }, []);
-  useEffect(() => {
-    fetch("/api/v2/models/connect")
-      .then((r) => r.json())
-      .then(
-        (json: {
-          providers?: Array<{
-            id: string;
-            label: string;
-            defaultModel: string;
-            devCloudConfigured: boolean;
-            authUrl: string | null;
-          }>;
-        }) =>
-          setProviderStatuses([
-            defaultProviderStatuses[0],
-            ...(json.providers ?? []).map((p) => ({
-              id: p.id as V2ProviderId,
-              label: p.label,
-              defaultModel: p.defaultModel,
-              status: p.devCloudConfigured
-                ? ("configured" as const)
-                : ("not_configured" as const),
-              keySource: p.devCloudConfigured
-                ? ("Dev Cloud key" as const)
-                : ("not connected" as const),
-              authUrlAvailable: Boolean(p.authUrl),
-              message: p.devCloudConfigured
-                ? `${p.label} is configured via Dev Cloud key.`
-                : `${p.label} is not configured. Add a Dev Cloud key or use BYOK in Settings.`,
-            })),
-          ]),
-      )
-      .catch(() =>
-        setProviderStatuses((items) =>
-          items.map((p) =>
-            p.id === "local"
-              ? p
-              : {
-                  ...p,
-                  status: "connection_failed",
-                  message: "Provider status endpoint unavailable.",
-                },
-          ),
-        ),
-      );
   }, []);
 
   const buildSession = useCallback(
     (): V2WorkspaceSession => ({
       version: 1,
       savedAt: new Date().toISOString(),
-      selectedMechanism,
+      ...buildMechanismSession(),
       activeProvider,
       active,
       activeArtifact,
-      fourBar: { form, sweepForm, result, sweepResult, selectedSampleIndex },
-      sliderCrank: {
-        form: sliderCrankForm,
-        sweepForm: sliderCrankSweepForm,
-        result: sliderCrankResult,
-        sweepResult: sliderCrankSweepResult,
-        selectedSampleIndex: selectedSliderCrankSampleIndex,
-      },
-      latestSynthesisRecommendations,
       messages,
       activityLog,
       theme,
@@ -285,266 +106,49 @@ export function V2AppShell() {
       activeArtifact,
       activeProvider,
       activityLog,
-      form,
-      latestSynthesisRecommendations,
+      buildMechanismSession,
       messages,
-      result,
-      selectedMechanism,
-      selectedSampleIndex,
-      selectedSliderCrankSampleIndex,
-      sliderCrankForm,
-      sliderCrankResult,
-      sliderCrankSweepForm,
-      sliderCrankSweepResult,
-      sweepForm,
-      sweepResult,
       theme,
     ],
   );
 
-  const persistSession = useCallback(
-    (status: "Saved" | "Restored" = "Saved") => {
-      try {
-        const session = buildSession();
-        saveV2Session(session);
-        setLastSavedAt(session.savedAt);
-        setSessionStatus(status);
-      } catch {
-        appendActivity(
-          setActivityLog,
-          "session",
-          "Session could not be saved because browser storage is full.",
-          "warning",
-        );
-        setSessionStatus("Local session");
-      }
+  const restoreSession = useCallback(
+    (session: V2WorkspaceSession) => {
+      restoreMechanismSession(session);
+      setActive(session.active);
+      setActiveArtifact(session.activeArtifact);
+      setActiveProvider(session.activeProvider);
+      setTheme(session.theme);
+      setMessages(
+        session.messages.length
+          ? session.messages
+          : [
+              buildAgentMessage(
+                "Previous session restored with an empty timeline.",
+              ),
+            ],
+      );
+      setActivityLog(session.activityLog);
     },
-    [buildSession],
+    [restoreMechanismSession],
   );
 
-  useEffect(() => {
-    if (!hasLoadedSession.current) return;
-    if (skipNextAutoSave.current) {
-      skipNextAutoSave.current = false;
-      return;
-    }
-    setSessionStatus("Saving…");
-    if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    saveTimer.current = window.setTimeout(() => persistSession("Saved"), 700);
-    return () => {
-      if (saveTimer.current) window.clearTimeout(saveTimer.current);
-    };
-  }, [persistSession]);
-
-  const restoreSession = useCallback((session: V2WorkspaceSession) => {
-    setSelectedMechanism(session.selectedMechanism);
-    setActive(session.active);
-    setActiveArtifact(session.activeArtifact);
-    setActiveProvider(session.activeProvider);
-    setTheme(session.theme);
-    setForm(session.fourBar.form);
-    setSweepForm(session.fourBar.sweepForm);
-    setResult(session.fourBar.result);
-    setSweepResult(session.fourBar.sweepResult);
-    setSelectedSampleIndex(session.fourBar.selectedSampleIndex);
-    setSliderCrankForm(session.sliderCrank.form);
-    setSliderCrankSweepForm(session.sliderCrank.sweepForm);
-    setSliderCrankResult(session.sliderCrank.result);
-    setSliderCrankSweepResult(session.sliderCrank.sweepResult);
-    setSelectedSliderCrankSampleIndex(session.sliderCrank.selectedSampleIndex);
-    setLatestSynthesisRecommendations(session.latestSynthesisRecommendations);
-    setMessages(
-      session.messages.length
-        ? session.messages
-        : [
-            buildAgentMessage(
-              "Previous session restored with an empty timeline.",
-            ),
-          ],
-    );
-    setActivityLog(session.activityLog);
-    setIsPlaying(false);
-    setIsSliderCrankPlaying(false);
-    setError(null);
-    setSliderCrankError(null);
-  }, []);
-
-  const saveSessionNow = useCallback(() => {
-    persistSession("Saved");
-    appendActivity(
-      setActivityLog,
-      "session",
-      "V2 workspace session saved manually.",
-      "success",
-    );
-  }, [persistSession]);
-  const restoreSavedSession = useCallback(() => {
-    const loaded = loadV2Session();
-    if (loaded.status === "restored") {
-      restoreSession(loaded.session);
-      setLastSavedAt(loaded.session.savedAt);
-      setSessionStatus("Restored");
-      setRestoreBannerOpen(true);
-      appendActivity(
-        setActivityLog,
-        "session",
-        "Previous V2 workspace session restored.",
-        "success",
-      );
-    } else
-      appendActivity(
-        setActivityLog,
-        "session",
-        "No saved V2 workspace session found.",
-        "warning",
-      );
-  }, [restoreSession]);
-  const clearSavedSession = useCallback(() => {
-    skipNextAutoSave.current = true;
-    clearV2Session();
-    setLastSavedAt(null);
-    setSessionStatus("Local session");
-    setRestoreBannerOpen(false);
-    appendActivity(
-      setActivityLog,
-      "session",
-      "Saved V2 workspace session cleared from this browser.",
-      "success",
-    );
-  }, []);
-
-  const runAnalysis = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await analyzeFourBar(form);
-      setResult(response);
-      setSweepResult(null);
-      setIsPlaying(false);
-      return response as Record<string, unknown>;
-    } catch (analysisError) {
-      const message =
-        analysisError instanceof Error
-          ? analysisError.message
-          : "Unable to run analysis";
-      setError(message);
-      setResult(null);
-      appendActivity(
-        setActivityLog,
-        "solver",
-        `Solver error: ${message}. Check /api/health or deployment status.`,
-        "error",
-      );
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [form]);
-
-  const runSliderCrankAnalysis = useCallback(async () => {
-    setIsSliderCrankLoading(true);
-    setSliderCrankError(null);
-    try {
-      const response = await analyzeSliderCrank(sliderCrankForm);
-      setSliderCrankResult(response);
-      setSliderCrankSweepResult(null);
-      setIsSliderCrankPlaying(false);
-      return response as Record<string, unknown>;
-    } catch (analysisError) {
-      const message =
-        analysisError instanceof Error
-          ? analysisError.message
-          : "Unable to run slider-crank analysis";
-      setSliderCrankError(message);
-      setSliderCrankResult(null);
-      appendActivity(
-        setActivityLog,
-        "solver",
-        `Solver error: ${message}. Check /api/health or deployment status.`,
-        "error",
-      );
-      return null;
-    } finally {
-      setIsSliderCrankLoading(false);
-    }
-  }, [sliderCrankForm]);
-
-  const runSweep = useCallback(async () => {
-    setIsSweeping(true);
-    setError(null);
-    setIsPlaying(false);
-    try {
-      const response = await sweepFourBar({ ...form, ...sweepForm });
-      setSweepResult(response);
-      setSelectedSampleIndex(0);
-      return response as Record<string, unknown>;
-    } catch (sweepError) {
-      const message =
-        sweepError instanceof Error
-          ? sweepError.message
-          : "Unable to run simulation";
-      setError(message);
-      setSweepResult(null);
-      appendActivity(
-        setActivityLog,
-        "solver",
-        `Sweep error: ${message}. Check /api/health or deployment status.`,
-        "error",
-      );
-      return null;
-    } finally {
-      setIsSweeping(false);
-    }
-  }, [form, sweepForm]);
-
-  const runSliderCrankSweep = useCallback(async () => {
-    setIsSliderCrankSweeping(true);
-    setSliderCrankError(null);
-    setIsSliderCrankPlaying(false);
-    try {
-      const response = await sweepSliderCrank({
-        ...sliderCrankForm,
-        ...sliderCrankSweepForm,
-      });
-      setSliderCrankSweepResult(response);
-      setSelectedSliderCrankSampleIndex(0);
-      return response as Record<string, unknown>;
-    } catch (sweepError) {
-      const message =
-        sweepError instanceof Error
-          ? sweepError.message
-          : "Unable to run slider-crank simulation";
-      setSliderCrankError(message);
-      setSliderCrankSweepResult(null);
-      appendActivity(
-        setActivityLog,
-        "solver",
-        `Sweep error: ${message}. Check /api/health or deployment status.`,
-        "error",
-      );
-      return null;
-    } finally {
-      setIsSliderCrankSweeping(false);
-    }
-  }, [sliderCrankForm, sliderCrankSweepForm]);
+  const {
+    sessionStatus,
+    lastSavedAt,
+    restoreBannerOpen,
+    setRestoreBannerOpen,
+    saveSessionNow,
+    restoreSavedSession,
+    clearSavedSession,
+  } = useV2SessionPersistence({
+    buildSession,
+    restoreSession,
+    appendActivity: appendWorkspaceActivity,
+  });
 
   const resetMissionState = useCallback(() => {
-    setSelectedMechanism("four_bar");
-    setForm(initialForm);
-    setSweepForm(initialSweep);
-    setResult(null);
-    setSweepResult(null);
-    setSelectedSampleIndex(0);
-    setIsPlaying(false);
-    setError(null);
-    setSliderCrankForm(initialSliderCrankForm);
-    setSliderCrankSweepForm(initialSliderCrankSweep);
-    setSliderCrankResult(null);
-    setSliderCrankSweepResult(null);
-    setSelectedSliderCrankSampleIndex(0);
-    setIsSliderCrankPlaying(false);
-    setSliderCrankError(null);
-    setLatestSynthesisRecommendations(null);
+    resetMechanismRuntime();
     setActive("Workspace");
     setActiveArtifact(null);
     setMessages([
@@ -566,7 +170,7 @@ export function V2AppShell() {
     setActivityLog([
       buildActivity("system", "V2 mission state reset.", "success"),
     ]);
-  }, []);
+  }, [resetMechanismRuntime]);
 
   const closeGuide = useCallback((_neverShowAgain?: boolean) => {
     window.localStorage.setItem(firstRunStorageKey, "true");
@@ -577,23 +181,7 @@ export function V2AppShell() {
     (templateId: V2MissionTemplateId) => {
       const template = getV2MissionTemplate(templateId);
       if (!template) return;
-      if (template.mechanism === "four_bar") {
-        setSelectedMechanism("four_bar");
-        setForm(fourBarDemoParameters);
-        setSweepForm(fourBarDemoSweep);
-        setResult(null);
-        setSweepResult(null);
-        setSelectedSampleIndex(0);
-      }
-      if (template.mechanism === "slider_crank") {
-        setSelectedMechanism("slider_crank");
-        setSliderCrankForm(sliderCrankDemoParameters);
-        setSliderCrankSweepForm(sliderCrankDemoSweep);
-        setSliderCrankResult(null);
-        setSliderCrankSweepResult(null);
-        setSelectedSliderCrankSampleIndex(0);
-      }
-      setLatestSynthesisRecommendations(null);
+      if (template.mechanism) loadMissionTemplateMechanism(template.mechanism);
       setActive("Workspace");
       if (template.targetArtifact) setActiveArtifact(template.targetArtifact);
       const mechanism = template.mechanism ?? selectedMechanism;
@@ -628,50 +216,8 @@ export function V2AppShell() {
       window.localStorage.setItem(firstRunStorageKey, "true");
       setGuideOpen(false);
     },
-    [selectedMechanism],
+    [loadMissionTemplateMechanism, selectedMechanism],
   );
-
-  const mechanismState: V2MechanismState = {
-    selectedMechanism,
-    setSelectedMechanism,
-    form,
-    setForm,
-    sweepForm,
-    setSweepForm,
-    result,
-    displayResult,
-    sweepResult,
-    selectedSampleIndex,
-    setSelectedSampleIndex,
-    isPlaying,
-    setIsPlaying,
-    isLoading,
-    isSweeping,
-    error,
-    runAnalysis,
-    runSweep,
-    sliderCrankForm,
-    setSliderCrankForm,
-    sliderCrankSweepForm,
-    setSliderCrankSweepForm,
-    sliderCrankResult,
-    displaySliderCrankResult,
-    sliderCrankSweepResult,
-    selectedSliderCrankSampleIndex,
-    setSelectedSliderCrankSampleIndex,
-    isSliderCrankPlaying,
-    setIsSliderCrankPlaying,
-    isSliderCrankLoading,
-    isSliderCrankSweeping,
-    sliderCrankError,
-    runSliderCrankAnalysis,
-    runSliderCrankSweep,
-    inputParameters,
-    solverResult: solverResult as Record<string, unknown> | null,
-    sweepResultForReport: currentSweepResult as Record<string, unknown> | null,
-    latestSynthesisRecommendations,
-    setLatestSynthesisRecommendations,
-  };
 
   const runAgentCommand = useCallback(
     async (command: string, modelProvider: V2ProviderId = activeProvider) => {
@@ -1087,7 +633,7 @@ export function V2AppShell() {
           activeProvider={activeProvider}
           providers={providerStatuses}
           activityLog={activityLog}
-          latestError={error ?? sliderCrankError}
+          latestError={latestError}
           messages={messages}
           sessionStatus={sessionStatus}
           lastSavedAt={lastSavedAt}
@@ -1099,57 +645,6 @@ export function V2AppShell() {
       </div>
     </main>
   );
-}
-
-function useFourBarDisplayResult(
-  result: FourBarAnalysisResult | null,
-  sweepResult: FourBarSweepResponse | null,
-  selectedSampleIndex: number,
-) {
-  return useMemo<FourBarAnalysisResult | null>(() => {
-    const sample = sweepResult?.samples[selectedSampleIndex];
-    if (!sample || !sweepResult) return result;
-    return {
-      mechanism: "four_bar_linkage",
-      valid: sample.valid,
-      grashof_status: sweepResult.grashof_status,
-      mobility: sweepResult.mobility,
-      classification: sweepResult.classification,
-      theta2_deg: sample.theta2_deg,
-      theta3_deg: sample.theta3_deg,
-      theta4_deg: sample.theta4_deg,
-      joint_coordinates: sample.joint_coordinates,
-      velocity_analysis: sample.velocity_analysis,
-      acceleration_analysis: sample.acceleration_analysis,
-      notes: sample.notes,
-    };
-  }, [result, selectedSampleIndex, sweepResult]);
-}
-
-function useSliderCrankDisplayResult(
-  result: SliderCrankAnalysisResult | null,
-  sweepResult: SliderCrankSweepResponse | null,
-  selectedSampleIndex: number,
-  form: SliderCrankForm,
-) {
-  return useMemo<SliderCrankAnalysisResult | null>(() => {
-    const sample = sweepResult?.samples[selectedSampleIndex];
-    if (!sample) return result;
-    return {
-      mechanism: "slider_crank",
-      valid: sample.valid,
-      theta_deg: sample.theta_deg,
-      crank_radius: form.crank_radius,
-      connecting_rod_length: form.connecting_rod_length,
-      offset: form.offset,
-      slider_position: sample.slider_position,
-      transmission_angle_deg: sample.transmission_angle_deg,
-      joint_coordinates: sample.joint_coordinates,
-      velocity_analysis: sample.velocity_analysis,
-      acceleration_analysis: sample.acceleration_analysis,
-      notes: sample.notes,
-    };
-  }, [form, result, selectedSampleIndex, sweepResult]);
 }
 
 const defaultActions = [
@@ -1293,43 +788,6 @@ function summarizeDeterministicOutput(result: Record<string, unknown> | null) {
     : "Deterministic backend response stored; no compact scalar summary fields were present.";
 }
 
-const defaultProviderStatuses: V2ProviderStatus[] = [
-  {
-    id: "local",
-    label: "Local Deterministic Agent",
-    defaultModel: "backend deterministic solver",
-    status: "local",
-    keySource: "Local deterministic",
-    message: "Default numerical source of truth.",
-  },
-  {
-    id: "openai",
-    label: "ChatGPT / OpenAI",
-    defaultModel: "gpt-4o-mini",
-    status: "not_configured",
-    keySource: "not connected",
-    message:
-      "OpenAI is not configured. Add a Dev Cloud key or use BYOK in Settings.",
-  },
-  {
-    id: "anthropic",
-    label: "Claude / Anthropic",
-    defaultModel: "claude-3-5-haiku-20241022",
-    status: "not_configured",
-    keySource: "not connected",
-    message:
-      "Anthropic is not configured. Add a Dev Cloud key or use BYOK in Settings.",
-  },
-  {
-    id: "gemini",
-    label: "Gemini / Google AI",
-    defaultModel: "gemini-1.5-flash",
-    status: "not_configured",
-    keySource: "not connected",
-    message:
-      "Gemini is not configured. Add a Dev Cloud key or use BYOK in Settings.",
-  },
-];
 function buildActivity(
   type: string,
   message: string,
