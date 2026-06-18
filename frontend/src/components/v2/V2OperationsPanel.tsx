@@ -63,6 +63,7 @@ export function V2OperationsPanel({
   const missing = Object.entries(state.inputParameters).filter(
     ([, value]) => typeof value !== "number" || Number.isNaN(value),
   );
+  const apiHealth = latestError ? classifySolverError(latestError) : "No solver errors reported";
   return (
     <aside className="v2-scrollbar mt-3 h-auto overflow-y-auto rounded-[1.4rem] border border-v2-border bg-[#080807] p-3 xl:sticky xl:top-2 xl:mt-0 xl:block xl:h-[calc(100vh-1rem)]">
       <Panel title="Model Assignment">
@@ -188,8 +189,8 @@ export function V2OperationsPanel({
       <Panel title="Tool Status">
         <Rows
           rows={[
-            ["API health", "API health check not connected"],
-            ["Solver", "Deterministic active"],
+            ["API health", apiHealth],
+            ["Solver", latestError ? "Check /api/health or deployment status" : "Deterministic active"],
             ["Report builder", "Available"],
             ["Validation", "Available"],
           ]}
@@ -250,4 +251,16 @@ function formatSavedAt(value: string | null) {
         hour: "2-digit",
         minute: "2-digit",
       });
+}
+
+
+function classifySolverError(message: string) {
+  const normalized = message.toLowerCase();
+  if (normalized.includes("failed to fetch") || normalized.includes("network"))
+    return "API/deployment unavailable; check /api/health.";
+  if (normalized.includes("400") || normalized.includes("422"))
+    return "Bad parameters or solver validation error; review inputs.";
+  if (normalized.includes("500") || normalized.includes("502") || normalized.includes("503") || normalized.includes("504"))
+    return "Solver API unavailable; check deployment status.";
+  return "Solver call failed; check /api/health and parameter validity.";
 }
